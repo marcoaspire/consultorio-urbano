@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #051424;
+  --color-surface-dim: #051424;
+  --color-surface-bright: #2c3a4c;
+  --color-surface-container-lowest: #010f1f;
+  --color-surface-container-low: #0d1c2d;
+  --color-surface-container: #122131;
+  --color-surface-container-high: #1c2b3c;
+  --color-surface-container-highest: #273647;
+  --color-surface-variant: #273647;
+
+  --color-on-surface: #d4e4fa;
+  --color-on-surface-variant: #c6c6cd;
+  --color-outline: #909097;
+  --color-outline-variant: #45464d;
+
+  --color-primary: #bec6e0;
+  --color-on-primary: #283044;
+  --color-primary-container: #0f172a;
+  --color-on-primary-container: #798098;
+
+  --color-secondary: #ffb690;
+  --color-secondary-container: #ec6a06;
+  --color-on-secondary: #552100;
+  --color-on-secondary-container: #4a1c00;
+  --color-secondary-fixed: #ffdbca;
+
+  --color-tertiary: #7bd0ff;
+  --color-tertiary-container: #001a27;
+  --color-on-tertiary: #00354a;
+  --color-tertiary-fixed: #c4e7ff;
+  --color-tertiary-fixed-dim: #7bd0ff;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+
+  --font-headline: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #051424;
+  color: #d4e4fa;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism Styles based on DESIGN.md */
+.glass-panel {
+  background: rgba(5, 20, 36, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-subtle {
+  background: rgba(18, 33, 49, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-hover {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 30px -8px rgba(0, 0, 0, 0.6), 0 6px 12px -4px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Material Symbols alignment helper */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+  display: inline-block;
+}
+
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Custom technical scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #051424;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c2b3c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #273647;
+}

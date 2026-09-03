@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Navegación Analítica - Galería</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-error-container": "#ffdad6",
+                            "on-primary-fixed-variant": "#3f465c",
+                            "surface-dim": "#051424",
+                            "error": "#ffb4ab",
+                            "on-secondary": "#552100",
+                            "primary-fixed-dim": "#bec6e0",
+                            "surface-container": "#122131",
+                            "outline": "#909097",
+                            "surface-variant": "#273647",
+                            "tertiary": "#7bd0ff",
+                            "on-surface-variant": "#c6c6cd",
+                            "primary": "#bec6e0",
+                            "surface-tint": "#bec6e0",
+                            "on-primary-fixed": "#131b2e",
+                            "on-tertiary-container": "#008abb",
+                            "surface-container-high": "#1c2b3c",
+                            "on-background": "#d4e4fa",
+                            "on-error": "#690005",
+                            "on-tertiary": "#00354a",
+                            "surface": "#051424",
+                            "on-tertiary-fixed-variant": "#004c69",
+                            "primary-container": "#0f172a",
+                            "surface-container-lowest": "#010f1f",
+                            "secondary": "#ffb690",
+                            "tertiary-fixed-dim": "#7bd0ff",
+                            "inverse-surface": "#d4e4fa",
+                            "surface-container-low": "#0d1c2d",
+                            "error-container": "#93000a",
+                            "primary-fixed": "#dae2fd",
+                            "secondary-fixed-dim": "#ffb690",
+                            "on-secondary-fixed-variant": "#783200",
+                            "on-tertiary-fixed": "#001e2c",
+                            "outline-variant": "#45464d",
+                            "inverse-primary": "#565e74",
+                            "on-secondary-fixed": "#341100",
+                            "surface-container-highest": "#273647",
+                            "on-primary": "#283044",
+                            "on-secondary-container": "#4a1c00",
+                            "on-surface": "#d4e4fa",
+                            "surface-bright": "#2c3a4c",
+                            "inverse-on-surface": "#233143",
+                            "background": "#051424",
+                            "tertiary-fixed": "#c4e7ff",
+                            "secondary-fixed": "#ffdbca",
+                            "on-primary-container": "#798098",
+                            "tertiary-container": "#001a27",
+                            "secondary-container": "#ec6a06"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "touch-target": "44px",
+                            "panel-width": "360px",
+                            "container-margin": "24px",
+                            "gutter": "16px",
+                            "base": "8px"
+                    },
+                    "fontFamily": {
+                            "label-md": ["Inter"],
+                            "body-md": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "headline-lg": ["Montserrat"],
+                            "headline-md": ["Montserrat"],
+                            "headline-xl": ["Montserrat"],
+                            "body-sm": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "headline-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .glass-panel {
+            background: rgba(5, 20, 36, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface/90 dark:bg-surface/90 backdrop-blur-xl border-b border-white/10 shadow-sm sticky top-0 w-full z-50 flex justify-between items-center px-container-margin py-3">
+<div class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface whitespace-nowrap">
+            Navegación Analítica
+        </div>
+<div class="hidden md:flex flex-1 max-w-2xl px-8 relative w-full">
+<span class="material-symbols-outlined absolute left-12 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-surface-container-high border-b-2 border-surface-container-high focus:border-tertiary text-on-surface font-body-md text-body-md py-2 pl-12 pr-4 rounded-t-lg transition-colors outline-none placeholder:text-outline-variant" placeholder="Buscar por ciudad, tipo o fecha..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex bg-secondary text-on-secondary font-label-md text-label-md py-2 px-4 rounded-xl hover:bg-secondary-fixed transition-colors items-center justify-center gap-2 scale-98 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Nuevo Análisis
+            </button>
+<button class="md:hidden hover:bg-surface-variant/20 p-2 rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="hover:bg-surface-variant/20 p-2 rounded-full transition-colors text-primary">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 w-full pb-24 md:pb-8 min-h-screen flex flex-col">
+<div class="p-container-margin md:p-8 flex-1 flex flex-col max-w-[1600px] mx-auto w-full">
+<!-- Page Header -->
+<div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="font-headline-xl text-headline-lg-mobile md:text-headline-xl text-on-surface mb-2">Galería de Análisis</h1>
+<p class="font-body-lg text-body-md md:text-body-lg text-on-surface-variant max-w-2xl">
+                        Explora los estudios geoespaciales recientes, flujos de movilidad y mapas de calor procesados por la plataforma.
+                    </p>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<article class="glass-panel rounded-xl overflow-hidden flex flex-col card-hover transition-all duration-300 cursor-pointer group">
+<div class="h-48 relative overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 scale-105 group-hover:scale-100" data-alt="A high-tech digital map visualization of Madrid showing glowing urban flow lines in electric blue and vibrant orange against a dark navy background. The style is modern, data-driven, and analytical, resembling a detailed heat map with crisp vector lines overlaying the city grid." data-location="Madrid" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlO7PsPQt_fBkQaemU9o6m0cYby-E-R_6eVAulx89yuyKlIwzd2SyfgXFJSbTy8xZ-zW67Ne4dtP1JlvyddI-Z_FXy7eEDNO6ruoCF2w8Px2svC5jxQbcsfeZfOA5GLlpIUyAvGg74Jv6h_0i4pk56dlMl_VX5tL9s491P3lxwr9d8shlNWqpzyuQS7m6tm5VW1rxNTU2vzCSr6Qjn5Zr2zu9UQ2aPGb_Dtvg6ygjbXcpvLVBsFrU"/>
+<div class="absolute top-4 left-4 bg-surface/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface">Activo</span>
+</div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex items-center gap-2 mb-3 text-tertiary">
+<span class="material-symbols-outlined text-[18px]" data-icon="insights">insights</span>
+<span class="font-label-sm text-label-sm">Movilidad Urbana</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-tertiary transition-colors">Análisis de Flujo Urbano - Madrid</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 flex-1 line-clamp-3">
+                            Estudio detallado de los patrones de movimiento peatonal y vehicular en el centro de Madrid durante el último trimestre. Identificación de cuellos de botella en horas punta.
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+<span class="font-label-sm text-label-sm text-outline">Hace 2 días</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="glass-panel rounded-xl overflow-hidden flex flex-col card-hover transition-all duration-300 cursor-pointer group">
+<div class="h-48 relative overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 scale-105 group-hover:scale-100" data-alt="A sophisticated satellite topographical map of the Andes mountains focusing on Santiago. The terrain is rendered in dark slate and navy tones with elevation highlights in subtle orange and teal. The aesthetic is clean, professional, and analytical, suitable for environmental geospatial analysis." data-location="Santiago" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbg0FSlhkf9KpxD0qYqKirke-8hFmP8Pq5tMSU6Xiwa79MT9BIewupbzutoJltpFgmGIuVP_Np8Hey0PKIjBTI-Wm8lLG2JdGLWlgI2vN4T_-MazmnHkcPOHW8GAF3-OfHkFnhb0HDfurCuI_2CYS-nwZwFXQ8Rw5UDs3K6Di7wS960fF_QYzndFmVfIlZC_CPOkKFYJiNbCWjOYbXkaiBnxNYXUS5Q22WBd2o1s7NqgemIzZbIJw"/>
+<div class="absolute top-4 left-4 bg-surface/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+<span class="font-label-sm text-label-sm text-on-surface">Completado</span>
+</div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex items-center gap-2 mb-3 text-secondary">
+<span class="material-symbols-outlined text-[18px]" data-icon="terrain">terrain</span>
+<span class="font-label-sm text-label-sm">Topografía</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-secondary transition-colors">Evaluación de Terreno - Santiago</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 flex-1 line-clamp-3">
+                            Mapeo de elevación y análisis de riesgo de deslizamientos en la periferia oriental de Santiago de Chile utilizando datos LIDAR recientes.
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+<span class="font-label-sm text-label-sm text-outline">Hace 1 semana</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="glass-panel rounded-xl overflow-hidden flex flex-col card-hover transition-all duration-300 cursor-pointer group">
+<div class="h-48 relative overflow-hidden bg-surface-variant">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 scale-105 group-hover:scale-100" data-alt="A dark-mode demographic heat map of Mexico City. Areas of high density are shown in intense warm colors like bright orange and red, fading into deep navy blues for lower density areas. The map is overlaid with a subtle hex-grid pattern, giving it a highly technical and precise corporate minimalist look." data-location="Mexico City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgnaRkCBiVWC19_E-5U5kd7sNss1IvLYyeJx0eQy7gU869f1mYHkOwvyMa-H26R-hQ2H3Q6P1YM0_LCNRtaarwjFK85dpc--T26EqF8n0lRHQ6Pj-gIEUeZqJ2JMW9FBKq6jlpPw0l0fUaMmDQ8KvgtZhGlisyFQpXxFyT5z_YQudLFHvyjTrA2JLRW9kLab0aUw2Or3OUs_fqbyOEe2_uB3aJ8WLQSYvUO1je3nPkKSSOVCqJ-UE"/>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex items-center gap-2 mb-3 text-tertiary-fixed">
+<span class="material-symbols-outlined text-[18px]" data-icon="group">group</span>
+<span class="font-label-sm text-label-sm">Demografía</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-tertiary-fixed transition-colors">Densidad Poblacional - CDMX</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 flex-1 line-clamp-3">
+                            Visualización de la distribución demográfica en las delegaciones centrales de la Ciudad de México para optimización de rutas de transporte público.
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+<span class="font-label-sm text-label-sm text-outline">Hace 2 semanas</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface/80 dark:bg-surface/80 backdrop-blur-xl docked full-width bottom-0 rounded-t-full border-t border-white/10 shadow-lg fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 pb-safe">
+<!-- Active Tab: Mapas -> Maps to Galería conceptually -->
+<button class="flex flex-col items-center justify-center text-secondary font-bold active:bg-surface-variant/30 tap-highlight-transparent w-full h-full rounded-full mx-1">
+<span class="material-symbols-outlined" data-icon="explore" data-weight="fill" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-sm text-label-sm mt-1">Mapas</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant/30 tap-highlight-transparent w-full h-full rounded-full mx-1">
+<span class="material-symbols-outlined" data-icon="compare_arrows">compare_arrows</span>
+<span class="font-label-sm text-label-sm mt-1">Comparar</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant/30 tap-highlight-transparent w-full h-full rounded-full mx-1">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-sm text-label-sm mt-1">Subir</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant/30 tap-highlight-transparent w-full h-full rounded-full mx-1">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Perfil</span>
+</button>
+</nav>
+</body></html>

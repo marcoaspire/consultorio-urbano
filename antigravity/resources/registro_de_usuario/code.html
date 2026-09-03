@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acceso - Navegación Analítica</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-error-container": "#ffdad6",
+                            "on-primary-fixed-variant": "#3f465c",
+                            "surface-dim": "#051424",
+                            "error": "#ffb4ab",
+                            "on-secondary": "#552100",
+                            "primary-fixed-dim": "#bec6e0",
+                            "surface-container": "#122131",
+                            "outline": "#909097",
+                            "surface-variant": "#273647",
+                            "tertiary": "#7bd0ff",
+                            "on-surface-variant": "#c6c6cd",
+                            "primary": "#bec6e0",
+                            "surface-tint": "#bec6e0",
+                            "on-primary-fixed": "#131b2e",
+                            "on-tertiary-container": "#008abb",
+                            "surface-container-high": "#1c2b3c",
+                            "on-background": "#d4e4fa",
+                            "on-error": "#690005",
+                            "on-tertiary": "#00354a",
+                            "surface": "#051424",
+                            "on-tertiary-fixed-variant": "#004c69",
+                            "primary-container": "#0f172a",
+                            "surface-container-lowest": "#010f1f",
+                            "secondary": "#ffb690",
+                            "tertiary-fixed-dim": "#7bd0ff",
+                            "inverse-surface": "#d4e4fa",
+                            "surface-container-low": "#0d1c2d",
+                            "error-container": "#93000a",
+                            "primary-fixed": "#dae2fd",
+                            "secondary-fixed-dim": "#ffb690",
+                            "on-secondary-fixed-variant": "#783200",
+                            "on-tertiary-fixed": "#001e2c",
+                            "outline-variant": "#45464d",
+                            "inverse-primary": "#565e74",
+                            "on-secondary-fixed": "#341100",
+                            "surface-container-highest": "#273647",
+                            "on-primary": "#283044",
+                            "on-secondary-container": "#4a1c00",
+                            "on-surface": "#d4e4fa",
+                            "surface-bright": "#2c3a4c",
+                            "inverse-on-surface": "#233143",
+                            "background": "#051424",
+                            "tertiary-fixed": "#c4e7ff",
+                            "secondary-fixed": "#ffdbca",
+                            "on-primary-container": "#798098",
+                            "tertiary-container": "#001a27",
+                            "secondary-container": "#ec6a06"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "touch-target": "44px",
+                            "panel-width": "360px",
+                            "container-margin": "24px",
+                            "gutter": "16px",
+                            "base": "8px"
+                    },
+                    "fontFamily": {
+                            "label-md": ["Inter"],
+                            "body-md": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "headline-lg": ["Montserrat"],
+                            "headline-md": ["Montserrat"],
+                            "headline-xl": ["Montserrat"],
+                            "body-sm": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "headline-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        .glass-panel {
+            background-color: rgba(18, 33, 49, 0.8); /* surface-container */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Smooth transitions for form switching */
+        .form-container {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .form-hidden {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            transform: translateY(10px);
+        }
+        .form-visible {
+            opacity: 1;
+            pointer-events: auto;
+            position: relative;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex items-center justify-center relative overflow-hidden">
+<!-- Ambient Background Map Concept -->
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center opacity-40" data-alt="A highly detailed, dark-themed satellite map view of a modern metropolis at night. The map features glowing blue and subtle orange data visualization overlays outlining major arterial roads and geographic features. The aesthetic is highly analytical, reflecting a corporate minimal glassmorphism style, with a dark navy background and crisp, tech-driven illuminated lines." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgRiNyiXbY2TitZXm80wuuxH05cNnznktvAZU3UrOEKL3M_8YisTHgWZpwIBhyBL7ZQzKk4pbdNYggtMAQbajprH0W7_RGQ2YcMvFGiL_Za8l5hPAFRZo5nf40tQhxeo0OLdQK0cKlxqnayZEbGX4p0ceITU4oKXTlqTGqoc6UO_fGtds33WplbBWIMM6EnvGtRQ2O4QpNYd81kDVKE2_kBqXQE-I_DFFjoIPwLgSazHJpUDkVwoc')"></div>
+<!-- Gradient overlay to ensure text readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background"></div>
+</div>
+<!-- Login/Registration Card -->
+<main class="relative z-10 w-full max-w-[440px] px-container-margin py-8">
+<!-- Brand Header -->
+<div class="text-center mb-8">
+<h1 class="font-headline-xl text-headline-xl text-on-surface flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-[40px] text-primary">analytics</span>
+                Navegación Analítica
+            </h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">Plataforma de Análisis Geoespacial Avanzado</p>
+</div>
+<div class="glass-panel rounded-xl shadow-2xl overflow-hidden">
+<!-- Tab Navigation -->
+<div class="flex border-b border-white/10">
+<button class="flex-1 py-4 font-label-md text-label-md text-center transition-colors text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 border-b-2 border-transparent" id="tab-login" onclick="switchForm('login')">
+                    Acceso
+                </button>
+<button class="flex-1 py-4 font-label-md text-label-md text-center transition-colors text-primary font-bold border-b-2 border-primary bg-surface-variant/20" id="tab-register" onclick="switchForm('register')">
+                    Crear Cuenta
+                </button>
+</div>
+<div class="p-8 relative min-h-[380px]">
+<!-- Login Form -->
+<form class="form-container form-hidden flex flex-col gap-5 w-full" id="form-login">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="login-email">Correo Electrónico</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">mail</span>
+<input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-4 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="login-email" placeholder="usuario@empresa.com" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-center">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="login-password">Contraseña</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-tertiary transition-colors" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+<input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-10 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="login-password" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" onclick="togglePassword('login-password')" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<button class="mt-4 w-full bg-secondary-container hover:bg-secondary text-on-secondary-container font-label-md text-label-md py-3 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex justify-center items-center gap-2" type="submit">
+<span>Iniciar Sesión</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</form>
+<!-- Registration Form -->
+<form class="form-container form-visible flex flex-col gap-5 w-full" id="form-register"><div class="flex flex-col gap-1"><label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="reg-name">Nombre Completo</label><div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">person</span><input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-4 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="reg-name" placeholder="Nombre y Apellido" type="text"/></div></div><div class="flex flex-col gap-1"><label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="reg-email">Correo Electrónico</label><div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">mail</span><input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-4 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="reg-email" placeholder="usuario@empresa.com" type="email"/></div></div><div class="flex flex-col gap-1"><label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="reg-password">Contraseña</label><div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span><input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-10 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="reg-password" placeholder="••••••••" type="password"/><button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" onclick="togglePassword('reg-password')" type="button"><span class="material-symbols-outlined">visibility</span></button></div></div><div class="flex flex-col gap-1"><label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="reg-confirm-password">Confirmar Contraseña</label><div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span><input class="w-full bg-surface-container-highest border-b border-outline-variant rounded-t-DEFAULT text-on-surface font-body-md pl-10 pr-10 py-3 focus:outline-none focus:border-tertiary focus:bg-surface-bright transition-colors" id="reg-confirm-password" placeholder="••••••••" type="password"/><button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" onclick="togglePassword('reg-confirm-password')" type="button"><span class="material-symbols-outlined">visibility</span></button></div></div><button class="mt-4 w-full bg-secondary-container hover:bg-secondary text-on-secondary-container font-label-md text-label-md py-3 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex justify-center items-center gap-2" type="submit"><span>Registrarse</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button><p class="text-center font-body-sm text-[12px] text-on-surface-variant mt-2">¿Ya tienes cuenta? <a class="text-tertiary hover:underline cursor-pointer" onclick="switchForm('login')">Iniciar Sesión</a></p></form>
+</div>
+</div>
+</main>
+<script>
+        function switchForm(formType) {
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+
+            const activeTabClasses = 'text-primary font-bold border-b-2 border-primary bg-surface-variant/20'.split(' ');
+            const inactiveTabClasses = 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 border-b-2 border-transparent'.split(' ');
+
+            if (formType === 'login') {
+                // Show Login
+                loginForm.classList.remove('form-hidden');
+                loginForm.classList.add('form-visible');
+                registerForm.classList.remove('form-visible');
+                registerForm.classList.add('form-hidden');
+                
+                // Style Tabs
+                tabLogin.classList.remove(...inactiveTabClasses);
+                tabLogin.classList.add(...activeTabClasses);
+                tabRegister.classList.remove(...activeTabClasses);
+                tabRegister.classList.add(...inactiveTabClasses);
+            } else {
+                // Show Register
+                registerForm.classList.remove('form-hidden');
+                registerForm.classList.add('form-visible');
+                loginForm.classList.remove('form-visible');
+                loginForm.classList.add('form-hidden');
+                
+                // Style Tabs
+                tabRegister.classList.remove(...inactiveTabClasses);
+                tabRegister.classList.add(...activeTabClasses);
+                tabLogin.classList.remove(...activeTabClasses);
+                tabLogin.classList.add(...inactiveTabClasses);
+            }
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('.material-symbols-outlined');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+    </script>
+</body></html>

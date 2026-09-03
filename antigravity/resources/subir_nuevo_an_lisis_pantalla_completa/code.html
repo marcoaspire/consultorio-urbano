@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cargas - Navegación Analítica</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-dim": "#051424",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#552100",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-container": "#122131",
+                        "outline": "#909097",
+                        "surface-variant": "#273647",
+                        "tertiary": "#7bd0ff",
+                        "on-surface-variant": "#c6c6cd",
+                        "primary": "#bec6e0",
+                        "surface-tint": "#bec6e0",
+                        "on-primary-fixed": "#131b2e",
+                        "on-tertiary-container": "#008abb",
+                        "surface-container-high": "#1c2b3c",
+                        "on-background": "#d4e4fa",
+                        "on-error": "#690005",
+                        "on-tertiary": "#00354a",
+                        "surface": "#051424",
+                        "on-tertiary-fixed-variant": "#004c69",
+                        "primary-container": "#0f172a",
+                        "surface-container-lowest": "#010f1f",
+                        "secondary": "#ffb690",
+                        "tertiary-fixed-dim": "#7bd0ff",
+                        "inverse-surface": "#d4e4fa",
+                        "surface-container-low": "#0d1c2d",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#dae2fd",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-secondary-fixed-variant": "#783200",
+                        "on-tertiary-fixed": "#001e2c",
+                        "outline-variant": "#45464d",
+                        "inverse-primary": "#565e74",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container-highest": "#273647",
+                        "on-primary": "#283044",
+                        "on-secondary-container": "#4a1c00",
+                        "on-surface": "#d4e4fa",
+                        "surface-bright": "#2c3a4c",
+                        "inverse-on-surface": "#233143",
+                        "background": "#051424",
+                        "tertiary-fixed": "#c4e7ff",
+                        "secondary-fixed": "#ffdbca",
+                        "on-primary-container": "#798098",
+                        "tertiary-container": "#001a27",
+                        "secondary-container": "#ec6a06"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "touch-target": "44px",
+                        "panel-width": "360px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "headline-xl": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(18, 33, 49, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen overflow-x-hidden selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopNavBar -->
+<header class="flex bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-sm fixed top-0 left-0 w-full z-50 justify-between items-center px-container-margin h-touch-target">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface">Navegación Analítica</span>
+<a class="hidden md:flex items-center gap-2 text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span> Volver a la Galería
+</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-secondary-container text-on-secondary-container font-label-md text-label-md px-4 py-2 rounded-full hover:bg-secondary-container/90 transition-colors">Acceso</button>
+<button class="text-on-surface hover:bg-surface-variant/20 p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-[calc(44px+48px)] pb-12 min-h-screen relative flex justify-center">
+<!-- Abstract Background -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at top right, var(--tw-colors-tertiary-container), transparent 50%), radial-gradient(circle at bottom left, var(--tw-colors-primary-container), transparent 50%);"></div>
+<div class="relative z-10 px-container-margin w-full max-w-5xl">
+<header class="mb-8 text-center md:text-left">
+<h1 class="font-headline-lg text-headline-lg md:font-headline-xl md:text-headline-xl text-on-surface mb-2">Subir Nuevo Análisis</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Completa la información, sube las imágenes para la comparación y adjunta el reporte PDF.</p>
+</header>
+<form class="glass-panel rounded-2xl p-6 md:p-10 shadow-xl w-full">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+<!-- Left Column: Form Fields -->
+<div class="space-y-6">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="titulo">Título</label>
+<input class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-tertiary focus:outline-none transition-shadow font-body-sm text-body-sm shadow-inner" id="titulo" name="titulo" placeholder="Ej: Mapa Topográfico Q3 2023" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="descripcion">Descripción</label>
+<textarea class="w-full bg-surface-container-high border-none rounded-lg px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-tertiary focus:outline-none transition-shadow font-body-sm text-body-sm shadow-inner resize-none" id="descripcion" name="descripcion" placeholder="Breve descripción del origen de los datos y metodología..." rows="5"></textarea>
+</div>
+</div>
+<!-- Right Column: Upload Zones -->
+<div class="space-y-6">
+<!-- Image Upload -->
+<div class="grid grid-cols-1 gap-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2">Imagen Histórica (Antes)</label>
+<div class="border-2 border-dashed border-outline-variant hover:border-tertiary rounded-xl bg-surface-container/50 p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-tertiary mb-2 transition-colors">add_photo_alternate</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Subir imagen histórica</span>
+<input accept="image/*" class="hidden" type="file"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2">Imagen Actual (Después)</label>
+<div class="border-2 border-dashed border-outline-variant hover:border-tertiary rounded-xl bg-surface-container/50 p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-tertiary mb-2 transition-colors">add_photo_alternate</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Subir imagen actual</span>
+<input accept="image/*" class="hidden" type="file"/>
+</div>
+</div>
+</div>
+<!-- PDF Upload -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2">Subir PDF (Documentación Técnica)</label>
+<div class="border-2 border-dashed border-outline-variant hover:border-tertiary rounded-xl bg-surface-container/50 p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-tertiary mb-3 transition-colors">picture_as_pdf</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Arrastre el PDF de metadatos o haga clic</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant/50 mt-1">PDF hasta 25MB</span>
+<input accept=".pdf" class="hidden" type="file"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="mt-8 pt-6 border-t border-white/10 flex items-center justify-end gap-4">
+<button class="px-6 py-2 rounded-full font-label-md text-label-md text-on-surface hover:bg-surface-variant/50 transition-colors" type="button">
+                        Cancelar
+                    </button>
+<button class="px-8 py-2 rounded-full font-label-md text-label-md bg-secondary-container text-on-secondary-container hover:bg-secondary-container/90 transition-colors shadow-md flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">upload</span>
+                        Publicar
+                    </button>
+</div>
+</form>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-t border-white/10 shadow-lg rounded-t-full">
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant/30 tap-highlight-transparent p-2 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">arrow_back</span>
+<span class="font-label-sm text-label-sm">Galería</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary font-bold active:bg-surface-variant/30 tap-highlight-transparent p-2 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-sm text-label-sm">Subir</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:bg-surface-variant/30 tap-highlight-transparent p-2 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-sm text-label-sm">Perfil</span>
+</a>
+</nav>
+</body></html>
