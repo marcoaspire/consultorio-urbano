@@ -123,6 +123,9 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     onFileChange(null);
     setErrorMessage(null);
     if (inputRef.current) {

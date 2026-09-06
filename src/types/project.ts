@@ -1,20 +1,17 @@
+import type { Category } from './category';
+
 /**
  * Modelos de datos para Proyectos / Terrenos (Nivel 1: Portafolio Global).
  * Diseñado conforme a PostgreSQL agnóstico.
  */
 
-export type ProjectCategory =
-  | 'topografia'
-  | 'movilidad'
-  | 'catastro'
-  | 'medio_ambiente';
-
 export interface Project {
   id: string; // UUID
-  slug: string; // Ruta amigable URL (ej: /proyectos/evaluacion-de-terreno-b-42)
+  slug: string; // Ruta amigable URL
   name: string;
   location: string;
-  category: ProjectCategory;
+  category_slug: string;
+  category?: Category;
   description?: string;
   thumbnail_url?: string;
   analyses_count: number; // Conteo de entregas disponibles
@@ -27,11 +24,11 @@ export interface Project {
 export interface CreateProjectDTO {
   name: string;
   location: string;
-  category: ProjectCategory;
+  category_slug: string;
   description?: string;
 }
 
 export interface ProjectQueryParams {
   search?: string;
-  category?: ProjectCategory | 'todos';
+  category_slug?: string | 'todos';
 }

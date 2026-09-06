@@ -1,8 +1,8 @@
 import { supabase } from '../lib/supabase';
+import type { Category } from '../types/category';
 import type {
   CreateProjectDTO,
   Project,
-  ProjectCategory,
   ProjectQueryParams,
 } from '../types/project';
 
@@ -42,16 +42,16 @@ export const projectsService = {
    * Filtra registros activos (deleted_at IS NULL).
    */
   async getProjects(params: ProjectQueryParams = {}): Promise<Project[]> {
-    const { search = '', category = 'todos' } = params;
+    const { search = '', category_slug = 'todos' } = params;
 
     let query = supabase
       .from('projects')
-      .select('*, analyses:analyses(count)')
+      .select('*, category:categories(*), analyses:analyses(count)')
       .is('deleted_at', null);
 
     // Filtro por categoría en servidor
-    if (category && category !== 'todos') {
-      query = query.eq('category', category);
+    if (category_slug && category_slug !== 'todos') {
+      query = query.eq('category_slug', category_slug);
     }
 
     // Filtro por búsqueda textual (nombre, ubicación, descripción) en servidor
@@ -77,12 +77,15 @@ export const projectsService = {
           ? (row.analyses[0] as { count: number }).count
           : 0;
 
+      const categoryObj = row.category as Category | undefined;
+
       return {
         id: row.id,
         slug: row.slug,
         name: row.name,
         location: row.location,
-        category: row.category as ProjectCategory,
+        category_slug: row.category_slug || row.category,
+        category: categoryObj,
         description: row.description || undefined,
         thumbnail_url: row.thumbnail_url || undefined,
         analyses_count: analysesCount,
@@ -100,7 +103,7 @@ export const projectsService = {
   async getProjectBySlug(slug: string): Promise<Project | null> {
     const { data, error } = await supabase
       .from('projects')
-      .select('*, analyses:analyses(count)')
+      .select('*, category:categories(*), analyses:analyses(count)')
       .eq('slug', slug.toLowerCase())
       .is('deleted_at', null)
       .maybeSingle();
@@ -117,12 +120,15 @@ export const projectsService = {
         ? (data.analyses[0] as { count: number }).count
         : 0;
 
+    const categoryObj = data.category as Category | undefined;
+
     return {
       id: data.id,
       slug: data.slug,
       name: data.name,
       location: data.location,
-      category: data.category as ProjectCategory,
+      category_slug: data.category_slug || data.category,
+      category: categoryObj,
       description: data.description || undefined,
       thumbnail_url: data.thumbnail_url || undefined,
       analyses_count: analysesCount,
@@ -167,17 +173,17 @@ export const projectsService = {
       slug,
       name: dto.name.trim(),
       location: dto.location.trim(),
-      category: dto.category,
+      category_slug: dto.category_slug,
       description: dto.description?.trim() || null,
       thumbnail_url:
-        categoryThumbnails[dto.category] ||
+        categoryThumbnails[dto.category_slug] ||
         'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
     };
 
     const { data, error } = await supabase
       .from('projects')
       .insert(newRow)
-      .select()
+      .select('*, category:categories(*)')
       .single();
 
     if (error) {
@@ -185,12 +191,15 @@ export const projectsService = {
       throw error;
     }
 
+    const categoryObj = data.category as Category | undefined;
+
     return {
       id: data.id,
       slug: data.slug,
       name: data.name,
       location: data.location,
-      category: data.category as ProjectCategory,
+      category_slug: data.category_slug,
+      category: categoryObj,
       description: data.description || undefined,
       thumbnail_url: data.thumbnail_url || undefined,
       analyses_count: 0,

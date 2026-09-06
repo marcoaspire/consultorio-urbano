@@ -2,13 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { analysesService } from '../../../services/analyses.service';
 import type {
   Analysis,
-  AnalysisCategory,
   PaginatedResponse,
 } from '../../../types/analysis';
 
 interface UseAnalysesOptions {
   initialLimit?: number;
-  initialCategory?: AnalysisCategory | 'todos';
+  initialCategory?: string | 'todos';
   projectSlug?: string;
 }
 
@@ -17,7 +16,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
 
   const [page, setPageState] = useState(1);
   const [limit] = useState(initialLimit);
-  const [category, setCategoryState] = useState<AnalysisCategory | 'todos'>(
+  const [categorySlug, setCategorySlugState] = useState<string | 'todos'>(
     initialCategory
   );
   const [search, setSearchState] = useState('');
@@ -53,9 +52,9 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
   }, []);
 
   const setCategory = useCallback(
-    (newCategory: AnalysisCategory | 'todos') => {
+    (newCategory: string | 'todos') => {
       setIsLoading(true);
-      setCategoryState(newCategory);
+      setCategorySlugState(newCategory);
       setPageState(1);
     },
     []
@@ -73,7 +72,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
       const response = await analysesService.getAnalyses({
         page,
         limit,
-        category,
+        category_slug: categorySlug,
         search: debouncedSearch,
         projectSlug,
       });
@@ -97,7 +96,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, category, debouncedSearch, projectSlug]);
+  }, [page, limit, categorySlug, debouncedSearch, projectSlug]);
 
   useEffect(() => {
     let ignore = false;
@@ -107,7 +106,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
         const response = await analysesService.getAnalyses({
           page,
           limit,
-          category,
+          category_slug: categorySlug,
           search: debouncedSearch,
           projectSlug,
         });
@@ -144,7 +143,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     return () => {
       ignore = true;
     };
-  }, [page, limit, category, debouncedSearch, projectSlug]);
+  }, [page, limit, categorySlug, debouncedSearch, projectSlug]);
 
   return {
     analyses: data,
@@ -152,7 +151,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     isLoading,
     error,
     page,
-    category,
+    category: categorySlug,
     search,
     setPage,
     setCategory,

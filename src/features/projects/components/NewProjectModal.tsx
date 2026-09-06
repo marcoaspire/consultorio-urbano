@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import type { CreateProjectDTO, ProjectCategory } from '../../../types/project';
+import React, { useEffect, useState } from 'react';
+import { categoriesService } from '../../../services/categories.service';
+import type { Category } from '../../../types/category';
+import type { CreateProjectDTO } from '../../../types/project';
 
 interface NewProjectModalProps {
   isOpen: boolean;
@@ -14,10 +16,40 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState<ProjectCategory>('topografia');
+  const [categorySlug, setCategorySlug] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    setLoadingCategories(true);
+
+    categoriesService
+      .getCategories('project')
+      .then((cats) => {
+        if (isMounted) {
+          setCategories(cats);
+          if (cats.length > 0) {
+            setCategorySlug(cats[0].slug);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Error al cargar categorías de proyecto:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingCategories(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -35,18 +67,22 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
       return;
     }
 
+    if (!categorySlug) {
+      setError('Debes seleccionar una categoría.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmit({
         name: name.trim(),
         location: location.trim(),
-        category,
+        category_slug: categorySlug,
         description: description.trim() || undefined,
       });
       // Resetear estado
       setName('');
       setLocation('');
-      setCategory('topografia');
       setDescription('');
     } catch (err) {
       setError(
@@ -145,21 +181,29 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
             </div>
           </div>
 
-          {/* 3. Categoría Principal (Selector) */}
+          {/* 3. Categoría Principal (Selector Dinámico) */}
           <div className="space-y-1.5">
             <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
               Categoría Principal <span className="text-[#ec6a06]">*</span>
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ProjectCategory)}
-              className="w-full bg-[#1c2b3c] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] font-['Inter'] outline-none transition-colors cursor-pointer"
-            >
-              <option value="topografia">Topografía</option>
-              <option value="movilidad">Movilidad</option>
-              <option value="catastro">Catastro</option>
-              <option value="medio_ambiente">Medio Ambiente</option>
-            </select>
+            {loadingCategories ? (
+              <div className="w-full bg-[#1c2b3c] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-[#909097] font-['Inter'] flex items-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-[#7bd0ff]/40 border-t-[#7bd0ff] rounded-full animate-spin" />
+                Cargando categorías...
+              </div>
+            ) : (
+              <select
+                value={categorySlug}
+                onChange={(e) => setCategorySlug(e.target.value)}
+                className="w-full bg-[#1c2b3c] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] font-['Inter'] outline-none transition-colors cursor-pointer"
+              >
+                {categories.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* 4. Descripción General (Opcional) */}
@@ -189,7 +233,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || loadingCategories}
               className="flex items-center gap-2 bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-2 px-4 rounded-lg shadow-md shadow-[#ec6a06]/25 transition-all duration-200 active:scale-95 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (

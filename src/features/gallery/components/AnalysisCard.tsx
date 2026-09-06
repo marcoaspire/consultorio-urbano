@@ -1,48 +1,17 @@
 import React from 'react';
-import type { Analysis, AnalysisCategory } from '../../../types/analysis';
+import type { Analysis } from '../../../types/analysis';
 
 interface AnalysisCardProps {
   analysis: Analysis;
   onClick?: (analysis: Analysis) => void;
 }
 
-const CATEGORY_CONFIG: Record<
-  AnalysisCategory,
-  { label: string; icon: string; colorClass: string }
-> = {
-  movilidad: {
-    label: 'Movilidad Urbana',
-    icon: 'insights',
-    colorClass: 'text-[#7bd0ff]',
-  },
-  topografia: {
-    label: 'Topografía',
-    icon: 'terrain',
-    colorClass: 'text-[#ec6a06]',
-  },
-  demografia: {
-    label: 'Demografía',
-    icon: 'group',
-    colorClass: 'text-[#c084fc]',
-  },
-  medio_ambiente: {
-    label: 'Medio Ambiente',
-    icon: 'eco',
-    colorClass: 'text-[#4ade80]',
-  },
-  catastro: {
-    label: 'Catastro',
-    icon: 'domain',
-    colorClass: 'text-[#fde047]',
-  },
-};
-
 export const AnalysisCard: React.FC<AnalysisCardProps> = ({
   analysis,
   onClick,
 }) => {
-  const categoryInfo =
-    CATEGORY_CONFIG[analysis.category] || CATEGORY_CONFIG.movilidad;
+  const categoryName = analysis.category?.name || analysis.category_slug;
+  const categoryIcon = analysis.category?.icon || 'insights';
 
   const hasPdf = analysis.assets?.some((a) => a.asset_type === 'pdf_report');
   const hasMultipleImages =
@@ -106,15 +75,15 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
       {/* Card Content */}
       <div className="p-5 flex-1 flex flex-col">
         {/* Category Header */}
-        <div className={`flex items-center gap-1.5 mb-2.5 ${categoryInfo.colorClass}`}>
+        <div className="flex items-center gap-1.5 mb-2.5 text-[#7bd0ff]">
           <span
             className="material-symbols-outlined text-[18px]"
-            data-icon={categoryInfo.icon}
+            data-icon={categoryIcon}
           >
-            {categoryInfo.icon}
+            {categoryIcon}
           </span>
           <span className="font-['Inter'] text-[12px] font-semibold tracking-wider uppercase">
-            {categoryInfo.label}
+            {categoryName}
           </span>
         </div>
 

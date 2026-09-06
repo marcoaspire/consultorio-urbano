@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
 import { analysesService } from '../../services/analyses.service';
-import type { AnalysisCategory } from '../../types/analysis';
+import { categoriesService } from '../../services/categories.service';
+import type { Category } from '../../types/category';
 import { UploadDropzone } from './components/UploadDropzone';
 
 export const UploadAnalysisScreen: React.FC = () => {
@@ -13,8 +14,9 @@ export const UploadAnalysisScreen: React.FC = () => {
   // Estados del formulario
   const [title, setTitle] = useState('');
   const [city, setCity] = useState('');
-  const [quadrant, setQuadrant] = useState('');
-  const [category, setCategory] = useState<AnalysisCategory>('topografia');
+  const [categorySlug, setCategorySlug] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [description, setDescription] = useState('');
 
   // Estados de archivos y multimedia
@@ -24,11 +26,37 @@ export const UploadAnalysisScreen: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
-  // Estados de carga y progreso (Prioridad P3)
+  // Estados de carga y progreso
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingCategories(true);
+
+    categoriesService
+      .getCategories('analysis')
+      .then((cats) => {
+        if (isMounted) {
+          setCategories(cats);
+          if (cats.length > 0) {
+            setCategorySlug(cats[0].slug);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Error al obtener categorías de análisis:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingCategories(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +69,10 @@ export const UploadAnalysisScreen: React.FC = () => {
     }
     if (!city.trim()) {
       setFormError('Por favor indica la ciudad o región del estudio geoespacial.');
+      return;
+    }
+    if (!categorySlug) {
+      setFormError('Por favor selecciona una categoría geoespacial.');
       return;
     }
     if (!description.trim()) {
@@ -57,8 +89,7 @@ export const UploadAnalysisScreen: React.FC = () => {
           title: title.trim(),
           description: description.trim(),
           city: city.trim(),
-          quadrant: quadrant.trim() || undefined,
-          category,
+          category_slug: categorySlug,
           projectSlug: projectParam,
           videoUrl: videoUrl.trim() || undefined,
           videoFile: videoFile,
@@ -70,6 +101,12 @@ export const UploadAnalysisScreen: React.FC = () => {
           setUploadProgress(progress);
         }
       );
+
+      // Limpieza de archivos locales para liberar memoria del navegador
+      setImageBefore(null);
+      setImageAfter(null);
+      setPdfReport(null);
+      setVideoFile(null);
 
       setSuccessMessage(
         `¡Análisis "${created.title}" publicado con éxito! Redirigiendo a su visualizador...`
@@ -166,45 +203,26 @@ export const UploadAnalysisScreen: React.FC = () => {
                 />
               </div>
 
-              {/* Fila Ciudad y Cuadrante */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="ciudad"
-                    className="block font-['Inter'] font-semibold text-xs text-[#d4e4fa] uppercase tracking-wider mb-2"
-                  >
-                    Ciudad / Región <span className="text-[#ec6a06]">*</span>
-                  </label>
-                  <input
-                    id="ciudad"
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ej: Santiago, Madrid"
-                    className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-4 py-3 text-[#d4e4fa] placeholder-[#909097] text-sm font-['Inter'] transition-colors outline-none shadow-inner"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="cuadrante"
-                    className="block font-['Inter'] font-semibold text-xs text-[#d4e4fa] uppercase tracking-wider mb-2"
-                  >
-                    Sector / Cuadrante
-                  </label>
-                  <input
-                    id="cuadrante"
-                    type="text"
-                    value={quadrant}
-                    onChange={(e) => setQuadrant(e.target.value)}
-                    placeholder="Ej: Cuadrante Norte"
-                    className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-4 py-3 text-[#d4e4fa] placeholder-[#909097] text-sm font-['Inter'] transition-colors outline-none shadow-inner"
-                  />
-                </div>
+              {/* Ciudad / Región */}
+              <div>
+                <label
+                  htmlFor="ciudad"
+                  className="block font-['Inter'] font-semibold text-xs text-[#d4e4fa] uppercase tracking-wider mb-2"
+                >
+                  Ciudad / Región <span className="text-[#ec6a06]">*</span>
+                </label>
+                <input
+                  id="ciudad"
+                  type="text"
+                  required
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Ej: Santiago, Madrid"
+                  className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-4 py-3 text-[#d4e4fa] placeholder-[#909097] text-sm font-['Inter'] transition-colors outline-none shadow-inner"
+                />
               </div>
 
-              {/* Categoría */}
+              {/* Categoría (Dinámica) */}
               <div>
                 <label
                   htmlFor="categoria"
@@ -212,25 +230,30 @@ export const UploadAnalysisScreen: React.FC = () => {
                 >
                   Categoría Geoespacial <span className="text-[#ec6a06]">*</span>
                 </label>
-                <div className="relative">
-                  <select
-                    id="categoria"
-                    value={category}
-                    onChange={(e) =>
-                      setCategory(e.target.value as AnalysisCategory)
-                    }
-                    className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-4 py-3 text-[#d4e4fa] text-sm font-['Inter'] transition-colors outline-none appearance-none cursor-pointer pr-10"
-                  >
-                    <option value="topografia">Topografía y Relieve</option>
-                    <option value="movilidad">Movilidad Urbana</option>
-                    <option value="demografia">Demografía y Población</option>
-                    <option value="medio_ambiente">Medio Ambiente y NDVI</option>
-                    <option value="catastro">Catastro y Expansión Urbana</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#909097] pointer-events-none text-xl">
-                    expand_more
-                  </span>
-                </div>
+                {loadingCategories ? (
+                  <div className="w-full bg-[#1c2b3c]/80 border border-white/10 rounded-lg px-4 py-3 text-xs text-[#909097] flex items-center gap-2">
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-[#7bd0ff]/40 border-t-[#7bd0ff] rounded-full animate-spin" />
+                    Cargando categorías...
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      id="categoria"
+                      value={categorySlug}
+                      onChange={(e) => setCategorySlug(e.target.value)}
+                      className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-4 py-3 text-[#d4e4fa] text-sm font-['Inter'] transition-colors outline-none appearance-none cursor-pointer pr-10"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.slug} value={cat.slug}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#909097] pointer-events-none text-xl">
+                      expand_more
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Descripción */}
@@ -326,7 +349,7 @@ export const UploadAnalysisScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Barra de Progreso de Subida (Prioridad P3) */}
+          {/* Barra de Progreso de Subida */}
           {isSubmitting && (
             <div className="pt-2">
               <div className="flex justify-between items-center text-xs font-['Inter'] mb-1.5">
@@ -359,7 +382,7 @@ export const UploadAnalysisScreen: React.FC = () => {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || loadingCategories}
               className="px-6 py-2.5 rounded-lg font-['Inter'] font-semibold text-xs bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white transition-all shadow-md shadow-[#ec6a06]/20 flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-[18px]">

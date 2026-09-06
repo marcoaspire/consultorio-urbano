@@ -1,33 +1,41 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
+import { categoriesService } from '../../services/categories.service';
 import { projectsService } from '../../services/projects.service';
-import type {
-  CreateProjectDTO,
-  Project,
-  ProjectCategory,
-} from '../../types/project';
+import type { Category } from '../../types/category';
+import type { CreateProjectDTO, Project } from '../../types/project';
 import { NewProjectModal } from './components/NewProjectModal';
 import { ProjectCard } from './components/ProjectCard';
 import { ProjectCardSkeleton } from './components/ProjectCardSkeleton';
-
-const CATEGORY_TABS: Array<{ id: ProjectCategory | 'todos'; label: string; icon: string }> = [
-  { id: 'todos', label: 'Todos los Proyectos', icon: 'grid_view' },
-  { id: 'topografia', label: 'Topografía', icon: 'landscape' },
-  { id: 'movilidad', label: 'Movilidad', icon: 'traffic' },
-  { id: 'catastro', label: 'Catastro', icon: 'map' },
-  { id: 'medio_ambiente', label: 'Medio Ambiente', icon: 'park' },
-];
 
 export const ProjectsPortfolioScreen: React.FC = () => {
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [category, setCategory] = useState<ProjectCategory | 'todos'>('todos');
+  const [categorySlug, setCategorySlug] = useState<string>('todos');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Cargar lista de categorías para pestañas
+  useEffect(() => {
+    let ignore = false;
+    categoriesService
+      .getCategories('project')
+      .then((data) => {
+        if (!ignore) setCategories(data);
+      })
+      .catch((err) => {
+        console.error('Error al cargar categorías de proyectos:', err);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Debounce para la barra de búsqueda en memoria (200ms)
   useEffect(() => {
@@ -45,7 +53,7 @@ export const ProjectsPortfolioScreen: React.FC = () => {
       try {
         const data = await projectsService.getProjects({
           search: debouncedSearch,
-          category,
+          category_slug: categorySlug,
         });
         if (!ignore) {
           setProjects(data);
@@ -66,7 +74,7 @@ export const ProjectsPortfolioScreen: React.FC = () => {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearch, category]);
+  }, [debouncedSearch, categorySlug]);
 
   // Manejo de creación de nuevo proyecto
   const handleCreateProject = async (dto: CreateProjectDTO) => {
@@ -82,10 +90,10 @@ export const ProjectsPortfolioScreen: React.FC = () => {
 
   const handleClearFilters = () => {
     setSearch('');
-    setCategory('todos');
+    setCategorySlug('todos');
   };
 
-  const isFiltered = category !== 'todos' || Boolean(search.trim());
+  const isFiltered = categorySlug !== 'todos' || Boolean(search.trim());
 
   // Métricas rápidas del portafolio
   const totalDeliveries = useMemo(() => {
@@ -144,16 +152,31 @@ export const ProjectsPortfolioScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Barra de Filtros por Categoría */}
+        {/* Barra de Filtros por Categoría Dinámica */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-1">
           <div className="flex flex-wrap items-center gap-2">
-            {CATEGORY_TABS.map((tab) => {
-              const isActive = category === tab.id;
+            <button
+              type="button"
+              onClick={() => setCategorySlug('todos')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${
+                categorySlug === 'todos'
+                  ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
+                  : 'bg-[#122131]/80 hover:bg-[#1c2b3c] text-[#bec6e0] border border-white/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                grid_view
+              </span>
+              <span>Todos los Proyectos</span>
+            </button>
+
+            {categories.map((cat) => {
+              const isActive = categorySlug === cat.slug;
               return (
                 <button
-                  key={tab.id}
+                  key={cat.slug}
                   type="button"
-                  onClick={() => setCategory(tab.id)}
+                  onClick={() => setCategorySlug(cat.slug)}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${
                     isActive
                       ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
@@ -161,9 +184,9 @@ export const ProjectsPortfolioScreen: React.FC = () => {
                   }`}
                 >
                   <span className="material-symbols-outlined text-[16px]">
-                    {tab.icon}
+                    {cat.icon || 'folder'}
                   </span>
-                  <span>{tab.label}</span>
+                  <span>{cat.name}</span>
                 </button>
               );
             })}

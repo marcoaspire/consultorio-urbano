@@ -1,12 +1,31 @@
 import { supabase } from '../lib/supabase';
+import type { Category } from '../types/category';
 import type {
   Analysis,
   AnalysisAsset,
-  AnalysisCategory,
   AnalysisQueryParams,
   CreateAnalysisDTO,
   PaginatedResponse,
 } from '../types/analysis';
+
+/**
+ * Resuelve la URL pública de un asset. Si el valor es una URL externa (http/https/blob), la retorna.
+ * Si es una ruta relativa de storage (ej: projects/slug/file.png), utiliza Supabase Storage.
+ */
+export function getAssetPublicUrl(storagePath: string): string {
+  if (!storagePath) return '';
+  if (
+    storagePath.startsWith('http://') ||
+    storagePath.startsWith('https://') ||
+    storagePath.startsWith('blob:')
+  ) {
+    return storagePath;
+  }
+  const { data } = supabase.storage
+    .from('analysis-assets')
+    .getPublicUrl(storagePath);
+  return data.publicUrl;
+}
 
 /**
  * Formatea una fecha ISO a texto relativo en español.
@@ -32,9 +51,47 @@ function formatRelativeDate(isoDate?: string): string {
 }
 
 /**
+ * Sube un archivo físico a Supabase Storage en el bucket 'analysis-assets'
+ * y retorna la ruta relativa de almacenamiento y su URL pública permanente.
+ */
+async function uploadAssetToStorage(
+  file: File,
+  projectFolder: string,
+  categoryPrefix: string
+): Promise<{ storagePath: string; publicUrl: string }> {
+  const timestamp = Date.now();
+  const sanitizedName = file.name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9._-]/g, '_');
+
+  const filePath = `projects/${projectFolder}/${timestamp}_${categoryPrefix}_${sanitizedName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('analysis-assets')
+    .upload(filePath, file, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error(`Error uploading ${categoryPrefix} to storage (${filePath}):`, uploadError);
+    throw new Error(`Error al subir "${file.name}" a almacenamiento: ${uploadError.message}`);
+  }
+
+  const publicUrl = getAssetPublicUrl(filePath);
+
+  return {
+    storagePath: filePath,
+    publicUrl,
+  };
+}
+
+/**
  * Servicio conectado a Supabase para la consulta y creación de análisis geoespaciales.
  * Delega la paginación, conteos y filtrado al backend (PostgreSQL en Supabase)
- * con soporte de Soft Delete en todas las tablas.
+ * con soporte de Soft Delete en todas las tablas y relaciones normalizadas.
  */
 export const analysesService = {
   /**
@@ -47,7 +104,7 @@ export const analysesService = {
       page = 1,
       limit = 8,
       search = '',
-      category = 'todos',
+      category_slug = 'todos',
       projectSlug,
     } = params;
 
@@ -56,17 +113,20 @@ export const analysesService = {
 
     let query = supabase
       .from('analyses')
-      .select('*, assets:analysis_assets(*)', { count: 'exact' })
+      .select(
+        '*, category:categories(*), assets:analysis_assets(*), projects!inner(slug)',
+        { count: 'exact' }
+      )
       .is('deleted_at', null);
 
-    // Filtro por proyecto (Nivel 2)
+    // Filtro por proyecto (Nivel 2) a través del JOIN con projects
     if (projectSlug) {
-      query = query.eq('project_slug', projectSlug.toLowerCase());
+      query = query.eq('projects.slug', projectSlug.toLowerCase());
     }
 
     // Filtro por categoría en base de datos
-    if (category && category !== 'todos') {
-      query = query.eq('category', category);
+    if (category_slug && category_slug !== 'todos') {
+      query = query.eq('category_slug', category_slug);
     }
 
     // Filtro textual por búsqueda (título, descripción, ciudad) en base de datos
@@ -92,42 +152,47 @@ export const analysesService = {
     const validPage = Math.min(Math.max(1, page), totalPages);
 
     const mappedData: Analysis[] = (data || []).map((row) => {
-      // Filtrar assets activos (soft delete)
+      // Filtrar assets activos (soft delete) y resolver public_url
       const rawAssets = Array.isArray(row.assets) ? row.assets : [];
       const activeAssets: AnalysisAsset[] = rawAssets
         .filter((asset: AnalysisAsset) => !asset.deleted_at)
-        .map((asset: AnalysisAsset) => ({
-          id: asset.id,
-          analysis_id: asset.analysis_id,
-          asset_type: asset.asset_type,
-          storage_path: asset.storage_path,
-          mime_type: asset.mime_type,
-          file_size_bytes: asset.file_size_bytes,
-          metadata: asset.metadata,
-          created_at: asset.created_at,
-          updated_at: asset.updated_at,
-          deleted_at: asset.deleted_at,
-        }));
+        .map((asset: AnalysisAsset) => {
+          const resolvedPublicUrl = getAssetPublicUrl(asset.storage_path);
+          return {
+            id: asset.id,
+            analysis_id: asset.analysis_id,
+            asset_type: asset.asset_type,
+            storage_path: asset.storage_path,
+            public_url: resolvedPublicUrl,
+            mime_type: asset.mime_type,
+            file_size_bytes: asset.file_size_bytes,
+            metadata: asset.metadata,
+            created_at: asset.created_at,
+            updated_at: asset.updated_at,
+            deleted_at: asset.deleted_at,
+          };
+        });
 
-      // Extraer miniatura
+      // Extraer miniatura resuelta
       const afterAsset = activeAssets.find((a) => a.asset_type === 'image_after');
       const thumb =
         row.thumbnail_url ||
-        afterAsset?.storage_path ||
+        afterAsset?.public_url ||
         'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80';
+
+      const categoryObj = row.category as Category | undefined;
 
       return {
         id: row.id,
         slug: row.slug,
         project_id: row.project_id,
-        project_slug: row.project_slug,
         title: row.title,
         description: row.description,
         city: row.city,
-        quadrant: row.quadrant || undefined,
-        category: row.category as AnalysisCategory,
-        thumbnail_url: thumb,
-        video_url: row.video_url || undefined,
+        category_slug: row.category_slug || row.category,
+        category: categoryObj,
+        thumbnail_url: getAssetPublicUrl(thumb),
+        video_url: row.video_url ? getAssetPublicUrl(row.video_url) : undefined,
         technical_summary: row.technical_summary || undefined,
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -154,7 +219,7 @@ export const analysesService = {
   async getAnalysisById(id: string): Promise<Analysis | null> {
     const { data, error } = await supabase
       .from('analyses')
-      .select('*, assets:analysis_assets(*)')
+      .select('*, category:categories(*), assets:analysis_assets(*)')
       .eq('id', id)
       .is('deleted_at', null)
       .maybeSingle();
@@ -174,6 +239,7 @@ export const analysesService = {
         analysis_id: asset.analysis_id,
         asset_type: asset.asset_type,
         storage_path: asset.storage_path,
+        public_url: getAssetPublicUrl(asset.storage_path),
         mime_type: asset.mime_type,
         file_size_bytes: asset.file_size_bytes,
         metadata: asset.metadata,
@@ -182,18 +248,19 @@ export const analysesService = {
         deleted_at: asset.deleted_at,
       }));
 
+    const categoryObj = data.category as Category | undefined;
+
     return {
       id: data.id,
       slug: data.slug,
       project_id: data.project_id,
-      project_slug: data.project_slug,
       title: data.title,
       description: data.description,
       city: data.city,
-      quadrant: data.quadrant || undefined,
-      category: data.category as AnalysisCategory,
-      thumbnail_url: data.thumbnail_url || undefined,
-      video_url: data.video_url || undefined,
+      category_slug: data.category_slug || data.category,
+      category: categoryObj,
+      thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
+      video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
       technical_summary: data.technical_summary || undefined,
       created_at: data.created_at,
       updated_at: data.updated_at,
@@ -209,7 +276,7 @@ export const analysesService = {
   async getAnalysisBySlug(slug: string): Promise<Analysis | null> {
     const { data, error } = await supabase
       .from('analyses')
-      .select('*, assets:analysis_assets(*)')
+      .select('*, category:categories(*), assets:analysis_assets(*)')
       .eq('slug', slug.toLowerCase())
       .is('deleted_at', null)
       .maybeSingle();
@@ -229,6 +296,7 @@ export const analysesService = {
         analysis_id: asset.analysis_id,
         asset_type: asset.asset_type,
         storage_path: asset.storage_path,
+        public_url: getAssetPublicUrl(asset.storage_path),
         mime_type: asset.mime_type,
         file_size_bytes: asset.file_size_bytes,
         metadata: asset.metadata,
@@ -237,18 +305,19 @@ export const analysesService = {
         deleted_at: asset.deleted_at,
       }));
 
+    const categoryObj = data.category as Category | undefined;
+
     return {
       id: data.id,
       slug: data.slug,
       project_id: data.project_id,
-      project_slug: data.project_slug,
       title: data.title,
       description: data.description,
       city: data.city,
-      quadrant: data.quadrant || undefined,
-      category: data.category as AnalysisCategory,
-      thumbnail_url: data.thumbnail_url || undefined,
-      video_url: data.video_url || undefined,
+      category_slug: data.category_slug || data.category,
+      category: categoryObj,
+      thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
+      video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
       technical_summary: data.technical_summary || undefined,
       created_at: data.created_at,
       updated_at: data.updated_at,
@@ -259,13 +328,15 @@ export const analysesService = {
   },
 
   /**
-   * Publica un nuevo análisis en Supabase e inserta sus archivos y video asociados.
+   * Publica un nuevo análisis en Supabase:
+   * Sube los archivos físicos a Supabase Storage (bucket 'analysis-assets'),
+   * almacena rutas relativas en PostgreSQL e inserta assets asociados.
    */
   async createAnalysis(
     dto: CreateAnalysisDTO,
     onProgress?: (progress: number) => void
   ): Promise<Analysis> {
-    if (onProgress) onProgress(20);
+    if (onProgress) onProgress(10);
 
     const baseSlug = dto.title
       .toLowerCase()
@@ -276,43 +347,91 @@ export const analysesService = {
 
     const slug = `${baseSlug}-${Math.floor(100 + Math.random() * 900)}`;
 
-    // Rutas para imágenes (ObjectURL local para visualización inmediata en sesión o enlace externo)
-    const beforeUrl = dto.imageBeforeFile
-      ? URL.createObjectURL(dto.imageBeforeFile)
-      : 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80';
+    // 1. Obtener o resolver project_id
+    let projectId = dto.projectId;
+    let projectSlug = dto.projectSlug || 'evaluacion-de-terreno-b-42';
 
-    const afterUrl = dto.imageAfterFile
-      ? URL.createObjectURL(dto.imageAfterFile)
-      : 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+    if (!projectId && dto.projectSlug) {
+      const { data: proj } = await supabase
+        .from('projects')
+        .select('id, slug')
+        .eq('slug', dto.projectSlug)
+        .maybeSingle();
 
+      if (proj) {
+        projectId = proj.id;
+        projectSlug = proj.slug;
+      }
+    }
+
+    if (!projectId) {
+      // Tomar el primer proyecto activo por defecto si no se proveyó
+      const { data: firstProj } = await supabase
+        .from('projects')
+        .select('id, slug')
+        .is('deleted_at', null)
+        .limit(1)
+        .single();
+
+      if (firstProj) {
+        projectId = firstProj.id;
+        projectSlug = firstProj.slug;
+      } else {
+        throw new Error('No existe ningún proyecto activo para vincular el análisis.');
+      }
+    }
+
+    const folderSlug = projectSlug;
+
+    // 2. Subir archivos a Supabase Storage (guardando ruta relativa)
+    let beforeStoragePath =
+      'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80';
+    if (dto.imageBeforeFile) {
+      if (onProgress) onProgress(25);
+      const uploaded = await uploadAssetToStorage(
+        dto.imageBeforeFile,
+        folderSlug,
+        'before'
+      );
+      beforeStoragePath = uploaded.storagePath;
+    }
+
+    let afterStoragePath =
+      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+    if (dto.imageAfterFile) {
+      if (onProgress) onProgress(45);
+      const uploaded = await uploadAssetToStorage(
+        dto.imageAfterFile,
+        folderSlug,
+        'after'
+      );
+      afterStoragePath = uploaded.storagePath;
+    }
+
+    let pdfStoragePath = '';
     const pdfFilename = dto.pdfReportFile?.name || 'Reporte_Tecnico_Oficial.pdf';
-    const pdfUrl = dto.pdfReportFile
-      ? URL.createObjectURL(dto.pdfReportFile)
-      : `analyses/${slug}/${pdfFilename}`;
-
-    // Obtener videoUrl si se especificó URL o archivo de video
-    let videoUrl = dto.videoUrl?.trim() || null;
-    if (dto.videoFile && !videoUrl) {
-      videoUrl = URL.createObjectURL(dto.videoFile);
+    if (dto.pdfReportFile) {
+      if (onProgress) onProgress(65);
+      const uploaded = await uploadAssetToStorage(
+        dto.pdfReportFile,
+        folderSlug,
+        'pdf'
+      );
+      pdfStoragePath = uploaded.storagePath;
     }
 
-    if (onProgress) onProgress(40);
-
-    // Buscar project_id correspondiente a projectSlug si existe
-    let projectId: string | null = null;
-    const projectSlug = dto.projectSlug || 'evaluacion-de-terreno-b-42';
-
-    const { data: projectData } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('slug', projectSlug)
-      .maybeSingle();
-
-    if (projectData?.id) {
-      projectId = projectData.id;
+    let videoStoragePath = dto.videoUrl?.trim() || '';
+    if (dto.videoFile) {
+      if (onProgress) onProgress(75);
+      const uploaded = await uploadAssetToStorage(
+        dto.videoFile,
+        folderSlug,
+        'video'
+      );
+      videoStoragePath = uploaded.storagePath;
     }
 
-    if (onProgress) onProgress(60);
+    if (onProgress) onProgress(80);
 
     const technicalSummary = {
       pdf_filename: pdfFilename,
@@ -326,23 +445,21 @@ export const analysesService = {
       executive_summary: dto.description.trim(),
     };
 
-    // 1. Insertar el análisis principal en Supabase
+    // 3. Insertar el análisis principal en Supabase
     const { data: createdAnalysis, error: insertError } = await supabase
       .from('analyses')
       .insert({
         slug,
         project_id: projectId,
-        project_slug: projectSlug,
         title: dto.title.trim(),
         description: dto.description.trim(),
         city: dto.city.trim(),
-        quadrant: dto.quadrant?.trim() || 'Sector Central',
-        category: dto.category,
-        thumbnail_url: afterUrl,
-        video_url: videoUrl,
+        category_slug: dto.category_slug,
+        thumbnail_url: afterStoragePath,
+        video_url: videoStoragePath || null,
         technical_summary: technicalSummary,
       })
-      .select()
+      .select('*, category:categories(*)')
       .single();
 
     if (insertError) {
@@ -350,9 +467,9 @@ export const analysesService = {
       throw insertError;
     }
 
-    if (onProgress) onProgress(80);
+    if (onProgress) onProgress(90);
 
-    // 2. Preparar e insertar assets asociados
+    // 4. Preparar e insertar assets asociados en Supabase
     const assetsToInsert: Array<{
       analysis_id: string;
       asset_type: import('../types/analysis').AssetType;
@@ -364,7 +481,7 @@ export const analysesService = {
       {
         analysis_id: createdAnalysis.id,
         asset_type: 'image_before',
-        storage_path: beforeUrl,
+        storage_path: beforeStoragePath,
         mime_type: dto.imageBeforeFile?.type || 'image/jpeg',
         file_size_bytes: dto.imageBeforeFile?.size || 1024 * 1024 * 2,
         metadata: {
@@ -375,7 +492,7 @@ export const analysesService = {
       {
         analysis_id: createdAnalysis.id,
         asset_type: 'image_after',
-        storage_path: afterUrl,
+        storage_path: afterStoragePath,
         mime_type: dto.imageAfterFile?.type || 'image/jpeg',
         file_size_bytes: dto.imageAfterFile?.size || 1024 * 1024 * 3,
         metadata: {
@@ -385,25 +502,30 @@ export const analysesService = {
       },
     ];
 
-    if (dto.pdfReportFile || pdfUrl) {
+    if (pdfStoragePath) {
       assetsToInsert.push({
         analysis_id: createdAnalysis.id,
         asset_type: 'pdf_report',
-        storage_path: pdfUrl,
+        storage_path: pdfStoragePath,
         mime_type: dto.pdfReportFile?.type || 'application/pdf',
         file_size_bytes: dto.pdfReportFile?.size || 1024 * 1024 * 4,
-        metadata: { pages: 8 },
+        metadata: {
+          pages: 8,
+          filename: pdfFilename,
+        },
       });
     }
 
-    if (videoUrl) {
+    if (videoStoragePath) {
       assetsToInsert.push({
         analysis_id: createdAnalysis.id,
         asset_type: 'video',
-        storage_path: videoUrl,
+        storage_path: videoStoragePath,
         mime_type: dto.videoFile?.type || 'video/mp4',
         file_size_bytes: dto.videoFile?.size || 1024 * 1024 * 10,
-        metadata: { label: 'Recorrido en Video' },
+        metadata: {
+          label: 'Recorrido en Video',
+        },
       });
     }
 
@@ -418,24 +540,33 @@ export const analysesService = {
 
     if (onProgress) onProgress(100);
 
+    const categoryObj = createdAnalysis.category as Category | undefined;
+    const activeAssets: AnalysisAsset[] = ((createdAssets as AnalysisAsset[]) || []).map(
+      (a) => ({
+        ...a,
+        public_url: getAssetPublicUrl(a.storage_path),
+      })
+    );
+
     return {
       id: createdAnalysis.id,
       slug: createdAnalysis.slug,
       project_id: createdAnalysis.project_id,
-      project_slug: createdAnalysis.project_slug,
       title: createdAnalysis.title,
       description: createdAnalysis.description,
       city: createdAnalysis.city,
-      quadrant: createdAnalysis.quadrant,
-      category: createdAnalysis.category as AnalysisCategory,
-      thumbnail_url: createdAnalysis.thumbnail_url,
-      video_url: createdAnalysis.video_url || undefined,
+      category_slug: createdAnalysis.category_slug,
+      category: categoryObj,
+      thumbnail_url: getAssetPublicUrl(createdAnalysis.thumbnail_url),
+      video_url: createdAnalysis.video_url
+        ? getAssetPublicUrl(createdAnalysis.video_url)
+        : undefined,
       technical_summary: createdAnalysis.technical_summary,
       created_at: createdAnalysis.created_at,
       updated_at: createdAnalysis.updated_at,
       deleted_at: createdAnalysis.deleted_at,
       relative_time: 'Hace unos momentos',
-      assets: (createdAssets as AnalysisAsset[]) || [],
+      assets: activeAssets,
     };
   },
 

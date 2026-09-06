@@ -1,50 +1,17 @@
 import React from 'react';
-import type { Project, ProjectCategory } from '../../../types/project';
+import type { Project } from '../../../types/project';
 
 interface ProjectCardProps {
   project: Project;
   onSelect: (slug: string) => void;
 }
 
-const CATEGORY_STYLES: Record<
-  ProjectCategory,
-  { label: string; text: string; bg: string; border: string; icon: string }
-> = {
-  topografia: {
-    label: 'Topografía',
-    text: 'text-[#7bd0ff]',
-    bg: 'bg-[#7bd0ff]/10',
-    border: 'border-[#7bd0ff]/30',
-    icon: 'landscape',
-  },
-  movilidad: {
-    label: 'Movilidad',
-    text: 'text-[#ffb690]',
-    bg: 'bg-[#ec6a06]/15',
-    border: 'border-[#ec6a06]/30',
-    icon: 'traffic',
-  },
-  catastro: {
-    label: 'Catastro',
-    text: 'text-[#c3b5fd]',
-    bg: 'bg-[#8b5cf6]/15',
-    border: 'border-[#8b5cf6]/30',
-    icon: 'map',
-  },
-  medio_ambiente: {
-    label: 'Medio Ambiente',
-    text: 'text-[#6ee7b7]',
-    bg: 'bg-[#10b981]/15',
-    border: 'border-[#10b981]/30',
-    icon: 'park',
-  },
-};
-
 export const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   onSelect,
 }) => {
-  const catStyle = CATEGORY_STYLES[project.category] || CATEGORY_STYLES.topografia;
+  const categoryName = project.category?.name || project.category_slug;
+  const categoryIcon = project.category?.icon || 'folder';
 
   return (
     <article
@@ -65,12 +32,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         {/* Badge de Categoría Principal */}
         <div className="absolute top-3 left-3 flex items-center gap-1.5">
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-['Inter'] font-semibold uppercase tracking-wider backdrop-blur-md border shadow-sm ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-['Inter'] font-semibold uppercase tracking-wider backdrop-blur-md border shadow-sm bg-[#7bd0ff]/10 text-[#7bd0ff] border-[#7bd0ff]/30"
           >
             <span className="material-symbols-outlined text-[14px]">
-              {catStyle.icon}
+              {categoryIcon}
             </span>
-            {catStyle.label}
+            {categoryName}
           </span>
         </div>
 

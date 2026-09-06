@@ -56,11 +56,13 @@ export const AnalysisDetailScreen: React.FC = () => {
   );
 
   const beforeUrl =
+    beforeAsset?.public_url ||
     beforeAsset?.storage_path ||
     analysis?.thumbnail_url ||
     'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80';
 
   const afterUrl =
+    afterAsset?.public_url ||
     afterAsset?.storage_path ||
     analysis?.thumbnail_url ||
     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
@@ -74,7 +76,7 @@ export const AnalysisDetailScreen: React.FC = () => {
   const videoAsset = analysis?.assets?.find(
     (a) => a.asset_type === 'video'
   );
-  const videoUrl = analysis?.video_url || videoAsset?.storage_path;
+  const videoUrl = analysis?.video_url || videoAsset?.public_url || videoAsset?.storage_path;
 
   // Detectar formato embed (YouTube, Vimeo)
   const getEmbedUrl = (url: string): string | null => {
@@ -103,7 +105,7 @@ export const AnalysisDetailScreen: React.FC = () => {
   const pdfAsset = analysis?.assets?.find(
     (a) => a.asset_type === 'pdf_report'
   );
-  const pdfUrl = pdfAsset?.storage_path;
+  const pdfUrl = pdfAsset?.public_url || pdfAsset?.storage_path;
 
   return (
     <div className="min-h-screen bg-[#051424] text-[#d4e4fa] flex flex-col font-['Inter'] antialiased overflow-x-hidden">
@@ -112,16 +114,8 @@ export const AnalysisDetailScreen: React.FC = () => {
         search=""
         onSearchChange={() => { }}
         isDetailView={true}
-        backLabel={
-          analysis?.project_slug ? 'Volver al Proyecto' : 'Volver a Proyectos'
-        }
-        onBackClick={() => {
-          if (analysis?.project_slug) {
-            navigate(`/proyectos/${analysis.project_slug}`);
-          } else {
-            navigate('/');
-          }
-        }}
+        backLabel="Volver"
+        onBackClick={() => navigate(-1)}
         onBrandClick={() => navigate('/')}
       />
 
@@ -204,13 +198,11 @@ export const AnalysisDetailScreen: React.FC = () => {
                     <span className="material-symbols-outlined text-[15px]">
                       location_on
                     </span>
-                    <span>
-                      {analysis.city} {analysis.quadrant ? `• ${analysis.quadrant}` : ''}
-                    </span>
+                    <span>{analysis.city}</span>
                   </span>
                   <span className="text-[#45464d] mx-1">|</span>
                   <span className="uppercase text-[11px] font-semibold tracking-wider text-[#ffb690]">
-                    {analysis.category.replace('_', ' ')}
+                    {analysis.category?.name || analysis.category_slug}
                   </span>
                   {videoUrl && (
                     <>
