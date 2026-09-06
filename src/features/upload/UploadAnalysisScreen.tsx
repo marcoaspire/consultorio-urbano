@@ -17,10 +17,12 @@ export const UploadAnalysisScreen: React.FC = () => {
   const [category, setCategory] = useState<AnalysisCategory>('topografia');
   const [description, setDescription] = useState('');
 
-  // Estados de archivos
+  // Estados de archivos y multimedia
   const [imageBefore, setImageBefore] = useState<File | null>(null);
   const [imageAfter, setImageAfter] = useState<File | null>(null);
   const [pdfReport, setPdfReport] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   // Estados de carga y progreso (Prioridad P3)
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,6 +60,8 @@ export const UploadAnalysisScreen: React.FC = () => {
           quadrant: quadrant.trim() || undefined,
           category,
           projectSlug: projectParam,
+          videoUrl: videoUrl.trim() || undefined,
+          videoFile: videoFile,
           imageBeforeFile: imageBefore,
           imageAfterFile: imageAfter,
           pdfReportFile: pdfReport,
@@ -277,6 +281,48 @@ export const UploadAnalysisScreen: React.FC = () => {
                 onFileChange={setPdfReport}
                 helperText="Documento PDF técnico hasta 25MB"
               />
+
+              {/* Recorrido en Video (Opcional - Requerimiento de Cliente) */}
+              <div className="space-y-3 p-4 rounded-xl bg-[#122131]/80 border border-white/10 shadow-inner">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-[#7bd0ff]">
+                    videocam
+                  </span>
+                  <span className="text-xs font-['Inter'] font-semibold text-[#d4e4fa] uppercase tracking-wider">
+                    Recorrido en Video (Dron / Vuelo Virtual)
+                  </span>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="videoUrl"
+                    className="block text-[11px] font-['Inter'] font-medium text-[#bec6e0] mb-1"
+                  >
+                    URL de Video (YouTube, Vimeo o archivo MP4/WEBM)
+                  </label>
+                  <input
+                    id="videoUrl"
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://... (ej: https://youtu.be/... o archivo .mp4)"
+                    className="w-full bg-[#1c2b3c]/80 focus:bg-[#122131] border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2.5 text-[#d4e4fa] placeholder-[#909097] text-xs font-['Inter'] transition-colors outline-none"
+                  />
+                </div>
+
+                <div className="text-center text-[10px] text-[#909097] font-['Inter'] uppercase tracking-widest my-1">
+                  o cargar archivo de video directamente
+                </div>
+
+                <UploadDropzone
+                  label="Archivo de Video"
+                  fileType="video"
+                  file={videoFile}
+                  onFileChange={setVideoFile}
+                  maxSizeMB={50}
+                  helperText="MP4, WEBM o MOV hasta 50MB"
+                />
+              </div>
             </div>
           </div>
 

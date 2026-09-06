@@ -19,6 +19,8 @@ export interface Project {
   thumbnail_url?: string;
   analyses_count: number; // Conteo de entregas disponibles
   created_at: string; // TIMESTAMPTZ ISO
+  updated_at?: string; // TIMESTAMPTZ ISO
+  deleted_at?: string | null; // Soft delete timestamp
   relative_time?: string;
 }
 

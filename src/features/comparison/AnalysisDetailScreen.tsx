@@ -13,6 +13,7 @@ export const AnalysisDetailScreen: React.FC = () => {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [mediaTab, setMediaTab] = useState<'comparador' | 'video'>('comparador');
 
   useEffect(() => {
     let ignore = false;
@@ -68,6 +69,35 @@ export const AnalysisDetailScreen: React.FC = () => {
     (beforeAsset?.metadata?.label as string) || 'Histórico (2020)';
   const afterLabel =
     (afterAsset?.metadata?.label as string) || 'Actual (2023)';
+
+  // Extraer video del análisis (columna video_url o asset de tipo video)
+  const videoAsset = analysis?.assets?.find(
+    (a) => a.asset_type === 'video'
+  );
+  const videoUrl = analysis?.video_url || videoAsset?.storage_path;
+
+  // Detectar formato embed (YouTube, Vimeo)
+  const getEmbedUrl = (url: string): string | null => {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch?v=')) {
+      const id = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes('youtu.be/')) {
+      const id = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes('vimeo.com/')) {
+      const id = url.split('vimeo.com/')[1]?.split('?')[0];
+      return `https://player.vimeo.com/video/${id}`;
+    }
+    if (url.includes('youtube.com/embed/')) {
+      return url;
+    }
+    return null;
+  };
+
+  const embedUrl = videoUrl ? getEmbedUrl(videoUrl) : null;
 
   // Extraer documento PDF si existe
   const pdfAsset = analysis?.assets?.find(
@@ -182,6 +212,17 @@ export const AnalysisDetailScreen: React.FC = () => {
                   <span className="uppercase text-[11px] font-semibold tracking-wider text-[#ffb690]">
                     {analysis.category.replace('_', ' ')}
                   </span>
+                  {videoUrl && (
+                    <>
+                      <span className="text-[#45464d] mx-1">|</span>
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7bd0ff]/15 text-[#7bd0ff] border border-[#7bd0ff]/30">
+                        <span className="material-symbols-outlined text-[12px]">
+                          videocam
+                        </span>
+                        <span>Video Disponible</span>
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -210,15 +251,117 @@ export const AnalysisDetailScreen: React.FC = () => {
               </div>
             </header>
 
-            {/* Cuadrícula en dos columnas: Comparador a la izquierda, Panel PDF a la derecha */}
+            {/* Cuadrícula en dos columnas: Visor Visual (Comparador/Video) a la izquierda, Panel PDF a la derecha */}
             <div className="flex-1 flex flex-col xl:flex-row gap-6 min-h-[520px]">
-              {/* Columna Izquierda: Slider comparador antes/después */}
-              <ImageComparisonSlider
-                beforeImage={beforeUrl}
-                afterImage={afterUrl}
-                beforeLabel={beforeLabel}
-                afterLabel={afterLabel}
-              />
+              {/* Columna Izquierda con pestañas multimedia */}
+              <div className="flex-1 flex flex-col gap-3 min-w-0">
+                {/* Selector de Pestañas: Comparador Satelital vs Recorrido en Video */}
+                <div className="flex items-center gap-2 bg-[#122131]/90 border border-white/10 p-1.5 rounded-xl self-start shadow-md">
+                  <button
+                    type="button"
+                    onClick={() => setMediaTab('comparador')}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all cursor-pointer ${
+                      mediaTab === 'comparador'
+                        ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
+                        : 'text-[#bec6e0] hover:text-[#d4e4fa] hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      compare
+                    </span>
+                    <span>Comparativa Satelital</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMediaTab('video')}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all cursor-pointer ${
+                      mediaTab === 'video'
+                        ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
+                        : 'text-[#bec6e0] hover:text-[#d4e4fa] hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      videocam
+                    </span>
+                    <span>Recorrido en Video</span>
+                    {videoUrl && (
+                      <span className="w-2 h-2 rounded-full bg-[#ec6a06] animate-pulse" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Contenido según pestaña activa */}
+                {mediaTab === 'comparador' ? (
+                  <ImageComparisonSlider
+                    beforeImage={beforeUrl}
+                    afterImage={afterUrl}
+                    beforeLabel={beforeLabel}
+                    afterLabel={afterLabel}
+                  />
+                ) : (
+                  /* Panel de Reproducción de Video */
+                  <div className="glass-panel p-4 rounded-2xl flex-1 flex flex-col justify-center items-center bg-[#010f1f]/80 border border-white/10 min-h-[480px]">
+                    {videoUrl ? (
+                      embedUrl ? (
+                        <div className="w-full h-full min-h-[460px] flex flex-col">
+                          <iframe
+                            src={embedUrl}
+                            title={`Video de inspección de ${analysis.title}`}
+                            className="w-full h-full min-h-[460px] rounded-xl border border-white/10 flex-1"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col justify-center items-center">
+                          <video
+                            src={videoUrl}
+                            controls
+                            playsInline
+                            className="w-full max-h-[500px] rounded-xl object-contain bg-black/80 border border-white/10 shadow-2xl"
+                          >
+                            Tu navegador no soporta el tag de video HTML5.
+                          </video>
+                          <div className="w-full mt-3 flex items-center justify-between text-xs text-[#909097] px-2 font-['Inter']">
+                            <span className="flex items-center gap-1 text-[#bec6e0]">
+                              <span className="material-symbols-outlined text-[16px] text-[#7bd0ff]">
+                                movie
+                              </span>
+                              <span>Reproductor nativo de video (Inspección / Dron)</span>
+                            </span>
+                            <a
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[#7bd0ff] hover:text-[#c4e7ff] hover:underline flex items-center gap-1 transition-colors"
+                            >
+                              <span>Abrir en nueva pestaña</span>
+                              <span className="material-symbols-outlined text-[14px]">
+                                open_in_new
+                              </span>
+                            </a>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-8 text-center max-w-sm">
+                        <div className="w-14 h-14 rounded-full bg-[#122131] flex items-center justify-center text-[#909097] mb-3 border border-white/10">
+                          <span className="material-symbols-outlined text-[28px]">
+                            videocam_off
+                          </span>
+                        </div>
+                        <h4 className="font-['Montserrat'] font-bold text-sm text-[#d4e4fa] mb-1">
+                          Sin recorrido en video
+                        </h4>
+                        <p className="font-['Inter'] text-xs text-[#909097] leading-relaxed">
+                          Este estudio territorial aún no tiene un video de sobrevuelo con dron o simulación virtual registrado en la base de datos.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Columna Derecha: Visor de reporte PDF y métricas */}
               <PdfViewerPanel

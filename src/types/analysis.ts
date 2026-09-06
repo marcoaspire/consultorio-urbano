@@ -14,12 +14,13 @@ export type AssetType =
   | 'image_before'
   | 'image_after'
   | 'pdf_report'
+  | 'video'
   | 'geojson'
   | 'other';
 
 /**
  * Tabla dependiente: analysis_assets
- * Almacena archivos asociados (imágenes satelitales de alta resolución, PDF)
+ * Almacena archivos asociados (imágenes satelitales de alta resolución, PDF, videos)
  */
 export interface AnalysisAsset {
   id: string; // UUID
@@ -35,9 +36,12 @@ export interface AnalysisAsset {
     sensor?: string;
     date_captured?: string;
     area_km2?: number;
+    duration_seconds?: number;
     [key: string]: unknown;
   }; // JSONB
   created_at: string; // TIMESTAMPTZ ISO
+  updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface TechnicalSummaryPage {
@@ -71,12 +75,14 @@ export interface Analysis {
   category: AnalysisCategory;
   created_at: string; // TIMESTAMPTZ ISO
   updated_at: string; // TIMESTAMPTZ ISO
+  deleted_at?: string | null;
   assets?: AnalysisAsset[];
   // Relación con el Nivel 1: Proyecto / Terreno
   project_id?: string;
   project_slug?: string;
-  // Campos auxiliares para renderizado visual
+  // Campos auxiliares para renderizado visual y multimedia
   thumbnail_url?: string;
+  video_url?: string;
   relative_time?: string;
   technical_summary?: TechnicalSummary;
 }
@@ -116,9 +122,11 @@ export interface CreateAnalysisDTO {
   quadrant?: string;
   category: AnalysisCategory;
   projectSlug?: string;
+  videoUrl?: string;
   imageBeforeFile?: File | null;
   imageAfterFile?: File | null;
   pdfReportFile?: File | null;
+  videoFile?: File | null;
 }
 
 
