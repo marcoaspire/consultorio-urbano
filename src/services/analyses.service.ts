@@ -4,6 +4,7 @@ import type {
   PaginatedResponse,
 } from '../types/analysis';
 import { MOCK_ANALYSES } from './mockAnalyses';
+import { projectsService } from './projects.service';
 
 /**
  * Servicio desacoplado para la consulta de análisis.
@@ -23,12 +24,20 @@ export const analysesService = {
       search = '',
       category = 'todos',
       status = 'todos',
+      projectSlug,
     } = params;
 
     // Simulación de latencia de red de base de datos remota (300ms)
     await new Promise((resolve) => setTimeout(resolve, 280));
 
     let filtered = [...MOCK_ANALYSES];
+
+    // Filtro por proyecto (Nivel 2)
+    if (projectSlug) {
+      filtered = filtered.filter(
+        (item) => item.project_slug?.toLowerCase() === projectSlug.toLowerCase()
+      );
+    }
 
     // Filtro por categoría en servidor
     if (category && category !== 'todos') {
@@ -181,6 +190,7 @@ export const analysesService = {
     const newAnalysis: Analysis = {
       id,
       slug,
+      project_slug: dto.projectSlug,
       title: dto.title.trim(),
       description: dto.description.trim(),
       city: dto.city.trim(),
@@ -210,6 +220,10 @@ export const analysesService = {
 
     // Agregar al inicio de los datos mock en memoria
     MOCK_ANALYSES.unshift(newAnalysis);
+
+    if (dto.projectSlug) {
+      projectsService.incrementAnalysesCount(dto.projectSlug);
+    }
 
     return newAnalysis;
   },

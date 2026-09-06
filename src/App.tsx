@@ -1,27 +1,30 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AnalysisDetailScreen } from './features/comparison/AnalysisDetailScreen';
 import { HomeScreen } from './features/gallery/HomeScreen';
+import { ProjectsPortfolioScreen } from './features/projects/ProjectsPortfolioScreen';
 import { UploadAnalysisScreen } from './features/upload/UploadAnalysisScreen';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Galería Principal */}
-        <Route path="/" element={<HomeScreen />} />
+        {/* Nivel 1: Portafolio Global de Proyectos / Terrenos */}
+        <Route path="/" element={<ProjectsPortfolioScreen />} />
 
-        {/* Carga y Publicación de Nuevo Análisis */}
+        {/* Nivel 2: Índice de Análisis del Proyecto */}
+        <Route path="/proyectos/:projectSlug" element={<HomeScreen />} />
+
+        {/* Formulario de Carga y Publicación de Nuevo Análisis */}
         <Route path="/nuevo" element={<UploadAnalysisScreen />} />
 
-        {/* Detalle del Análisis / Estudio con Comparador y Visor PDF */}
+        {/* Nivel 3: Detalle del Análisis / Estudio con Comparador y Visor PDF */}
         <Route path="/analisis/:slug" element={<AnalysisDetailScreen />} />
 
-        {/* Redirección por defecto */}
+        {/* Redirección por defecto al Portafolio Global */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 
 export default App;

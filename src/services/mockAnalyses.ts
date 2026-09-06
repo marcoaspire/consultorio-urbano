@@ -10,6 +10,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf7',
     slug: 'evaluacion-de-terreno-b-42',
+    project_slug: 'evaluacion-de-terreno-b-42',
     title: 'Evaluación de Terreno B-42',
     description:
       'Mapeo de elevación y análisis de riesgo de deslizamientos en la periferia oriental de Santiago de Chile utilizando datos LIDAR recientes. Las discrepancias observadas entre los conjuntos de datos indican una erosión significativa en el sector noroccidental.',
@@ -117,6 +118,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6',
     slug: 'analisis-de-flujo-urbano-madrid',
+    project_slug: 'red-vial-troncal-sur',
     title: 'Análisis de Flujo Urbano - Madrid',
     description:
       'Estudio detallado de los patrones de movimiento peatonal y vehicular en el centro de Madrid durante el último trimestre. Identificación de cuellos de botella en horas punta.',
@@ -175,6 +177,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf8',
     slug: 'densidad-poblacional-cdmx',
+    project_slug: 'red-vial-troncal-sur',
     title: 'Densidad Poblacional - CDMX',
     description:
       'Visualización de la distribución demográfica en las delegaciones centrales de la Ciudad de México para optimización de rutas de transporte público.',
@@ -222,6 +225,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf9',
     slug: 'indice-de-vegetacion-bogota',
+    project_slug: 'corredor-ecologico-metropolitano',
     title: 'Índice de Vegetación y Cobertura - Bogotá',
     description:
       'Monitoreo multitemporal del índice NDVI en los Cerros Orientales y la Sabana de Bogotá para identificar presiones urbanísticas sobre áreas protegidas.',
@@ -260,6 +264,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bfa',
     slug: 'catastro-y-expansion-urbana-valencia',
+    project_slug: 'poligono-industrial-norte',
     title: 'Catastro y Expansión Urbana - Valencia',
     description:
       'Análisis ortofotogramétrico de parcelas industriales y residenciales en la huerta sur de Valencia. Identificación de cambios morfológicos post-infraestructuras.',
@@ -298,6 +303,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bfb',
     slug: 'red-de-micro-movilidad-buenos-aires',
+    project_slug: 'red-vial-troncal-sur',
     title: 'Red de Micro-Movilidad y Ciclovías - Buenos Aires',
     description:
       'Mapeo de accesibilidad ciclista y puntos nodales de intermodalidad en Palermo, Recoleta y Microcentro con datos de sensores IoT.',
@@ -336,6 +342,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bfc',
     slug: 'vulnerabilidad-geologica-lima',
+    project_slug: 'evaluacion-de-terreno-b-42',
     title: 'Vulnerabilidad Geológica y Sismo - Lima',
     description:
       'Modelado de respuesta de suelo y pendientes críticas en los distritos de Villa María del Triunfo y San Juan de Lurigancho.',
@@ -353,6 +360,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bfd',
     slug: 'densidad-y-gentrificacion-barcelona',
+    project_slug: 'poligono-industrial-norte',
     title: 'Densidad y Gentrificación - Barcelona',
     description:
       'Evolución del parque habitacional y concentración de licencias turísticas en Ciutat Vella y Eixample con cruce catastral 2020-2025.',
@@ -370,6 +378,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bfe',
     slug: 'corredores-verdes-medellin',
+    project_slug: 'corredor-ecologico-metropolitano',
     title: 'Corredores Verdes y Temperatura Urbana - Medellín',
     description:
       'Medición satelital de islas de calor superficiales (LST) antes y después de la implementación de corredores biológicos urbanos.',
@@ -387,6 +396,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6bff',
     slug: 'levantamiento-catastral-sevilla',
+    project_slug: 'poligono-industrial-norte',
     title: 'Levantamiento Catastral Ribereño - Sevilla',
     description:
       'Inspección ortofotográfica de márgenes del Guadalquivir para delimitación de dominio público hidráulico y zonas inundables.',
@@ -404,6 +414,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c00',
     slug: 'tiempos-transmilenio-bogota',
+    project_slug: 'red-vial-troncal-sur',
     title: 'Tiempos de Desplazamiento Transmilenio - Bogotá',
     description:
       'Estudio de velocidad promedio de carriles exclusivos BRT en horas punta y análisis de transbordo en portales principales.',
@@ -421,6 +432,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c01',
     slug: 'cuencas-hidrograficas-santiago',
+    project_slug: 'evaluacion-de-terreno-b-42',
     title: 'Análisis de Cuencas Hidrográficas - Santiago',
     description:
       'Mapeo morfométrico de las microcuencas del Río Mapocho y cálculo de escorrentía superficial en episodios pluviométricos extremos.',
@@ -438,6 +450,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c02',
     slug: 'crecimiento-mancha-urbana-monterrey',
+    project_slug: 'poligono-industrial-norte',
     title: 'Crecimiento de Mancha Urbana - Monterrey',
     description:
       'Cartografía comparativa de la expansión perimetral 2015-2025 sobre áreas de valor ambiental y serranías circundantes.',
@@ -455,6 +468,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c03',
     slug: 'envejecimiento-demografico-madrid',
+    project_slug: 'evaluacion-de-terreno-b-42',
     title: 'Envejecimiento Demográfico y Servicios - Madrid',
     description:
       'Índice de accesibilidad peatonal a centros de salud y farmacias para población mayor de 65 años en distritos periurbanos.',
@@ -472,6 +486,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c04',
     slug: 'calidad-del-aire-cdmx',
+    project_slug: 'corredor-ecologico-metropolitano',
     title: 'Monitoreo de Calidad del Aire - CDMX',
     description:
       'Correlación entre concentraciones de PM2.5 y patrones de viento procedentes de la zona industrial norte del Valle de México.',
@@ -489,6 +504,7 @@ export const MOCK_ANALYSES: Analysis[] = [
   {
     id: 'f81d4fae-7dec-11d0-a765-00a0c91e6c05',
     slug: 'aforos-peatonales-superilles-barcelona',
+    project_slug: 'red-vial-troncal-sur',
     title: 'Aforos Peatonales en Superilles - Barcelona',
     description:
       'Evaluación de pacificación del tráfico rodado y aumento del espacio público activo en el distrito de Sant Antoni.',

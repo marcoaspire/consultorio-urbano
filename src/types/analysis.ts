@@ -75,6 +75,9 @@ export interface Analysis {
   created_at: string; // TIMESTAMPTZ ISO
   updated_at: string; // TIMESTAMPTZ ISO
   assets?: AnalysisAsset[];
+  // Relación con el Nivel 1: Proyecto / Terreno
+  project_id?: string;
+  project_slug?: string;
   // Campos auxiliares para renderizado visual
   thumbnail_url?: string;
   relative_time?: string;
@@ -91,6 +94,7 @@ export interface AnalysisQueryParams {
   category?: AnalysisCategory | 'todos';
   status?: AnalysisStatus | 'todos';
   sortBy?: 'date_desc' | 'date_asc' | 'title_asc';
+  projectSlug?: string; // Filtro por proyecto en Nivel 2
 }
 
 /**
@@ -115,8 +119,10 @@ export interface CreateAnalysisDTO {
   city: string;
   quadrant?: string;
   category: AnalysisCategory;
+  projectSlug?: string;
   imageBeforeFile?: File | null;
   imageAfterFile?: File | null;
   pdfReportFile?: File | null;
 }
+
 

@@ -11,10 +11,11 @@ import type {
 interface UseAnalysesOptions {
   initialLimit?: number;
   initialCategory?: AnalysisCategory | 'todos';
+  projectSlug?: string;
 }
 
 export function useAnalyses(options: UseAnalysesOptions = {}) {
-  const { initialLimit = 8, initialCategory = 'todos' } = options;
+  const { initialLimit = 8, initialCategory = 'todos', projectSlug } = options;
 
   const [page, setPageState] = useState(1);
   const [limit] = useState(initialLimit);
@@ -84,6 +85,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
         category,
         status,
         search: debouncedSearch,
+        projectSlug,
       });
 
       setData(response.data);
@@ -105,7 +107,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, category, status, debouncedSearch]);
+  }, [page, limit, category, status, debouncedSearch, projectSlug]);
 
   useEffect(() => {
     let ignore = false;
@@ -118,6 +120,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
           category,
           status,
           search: debouncedSearch,
+          projectSlug,
         });
 
         if (!ignore) {
@@ -152,7 +155,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     return () => {
       ignore = true;
     };
-  }, [page, limit, category, status, debouncedSearch]);
+  }, [page, limit, category, status, debouncedSearch, projectSlug]);
 
 
   return {

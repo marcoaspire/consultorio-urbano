@@ -4,8 +4,13 @@ import { useNavigate } from 'react-router-dom';
 interface TopNavBarProps {
   search?: string;
   onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  actionButtonText?: string;
+  onActionClick?: () => void;
   onNewAnalysisClick?: () => void;
   isDetailView?: boolean;
+  showBackButton?: boolean;
+  backLabel?: string;
   onBackClick?: () => void;
   onBrandClick?: () => void;
 }
@@ -13,8 +18,13 @@ interface TopNavBarProps {
 export const TopNavBar: React.FC<TopNavBarProps> = ({
   search = '',
   onSearchChange,
+  searchPlaceholder = 'Buscar por ciudad, tipo o fecha...',
+  actionButtonText = 'Nuevo Análisis',
+  onActionClick,
   onNewAnalysisClick,
   isDetailView = false,
+  showBackButton = false,
+  backLabel = 'Volver a la Galería',
   onBackClick,
   onBrandClick,
 }) => {
@@ -37,12 +47,16 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   };
 
   const handleNewClick = () => {
-    if (onNewAnalysisClick) {
+    if (onActionClick) {
+      onActionClick();
+    } else if (onNewAnalysisClick) {
       onNewAnalysisClick();
     } else {
       navigate('/nuevo');
     }
   };
+
+  const displayBack = isDetailView || showBackButton;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#051424]/90 backdrop-blur-xl border-b border-white/10 shadow-lg">
@@ -70,8 +84,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             </div>
           </div>
 
-          {/* Botón Volver a la Galería en vista de Detalle o Carga */}
-          {isDetailView && (
+          {/* Botón Volver (Nivel 2 -> Nivel 1 o Nivel 3 -> Nivel 2) */}
+          {displayBack && (
             <button
               type="button"
               onClick={handleBackClick}
@@ -80,12 +94,12 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               <span className="material-symbols-outlined text-[16px]">
                 arrow_back
               </span>
-              <span>Volver a la Galería</span>
+              <span>{backLabel}</span>
             </button>
           )}
         </div>
 
-        {/* Central Search Bar (Visible en Galería) */}
+        {/* Central Search Bar (Visible cuando hay handler onSearchChange) */}
         {!isDetailView && onSearchChange && (
           <div className="flex-1 max-w-xl mx-2 sm:mx-6">
             <div className="relative flex items-center">
@@ -96,7 +110,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 type="text"
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Buscar por ciudad, tipo o fecha..."
+                placeholder={searchPlaceholder}
                 className="w-full bg-[#1c2b3c]/80 hover:bg-[#1c2b3c] focus:bg-[#122131] border-b-2 border-[#273647] focus:border-[#7bd0ff] text-[#d4e4fa] placeholder-[#909097] font-['Inter'] text-sm py-2 pl-11 pr-9 rounded-t-md transition-all outline-none"
               />
               {search && (
@@ -124,7 +138,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               className="flex items-center gap-2 bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-2 px-3.5 sm:px-4 rounded-md shadow-md shadow-[#ec6a06]/20 transition-all duration-200 active:scale-95 cursor-pointer whitespace-nowrap"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="hidden sm:inline">Nuevo Análisis</span>
+              <span className="inline">{actionButtonText}</span>
             </button>
           ) : (
             <button

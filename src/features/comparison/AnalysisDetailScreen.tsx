@@ -71,12 +71,21 @@ export const AnalysisDetailScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#051424] text-[#d4e4fa] flex flex-col font-['Inter'] antialiased overflow-x-hidden">
-      {/* Top Navbar con botón de retorno '← Volver a la Galería' */}
+      {/* Top Navbar con botón de retorno al proyecto o portafolio */}
       <TopNavBar
         search=""
         onSearchChange={() => {}}
         isDetailView={true}
-        onBackClick={() => navigate('/')}
+        backLabel={
+          analysis?.project_slug ? 'Volver al Proyecto' : 'Volver a Proyectos'
+        }
+        onBackClick={() => {
+          if (analysis?.project_slug) {
+            navigate(`/proyectos/${analysis.project_slug}`);
+          } else {
+            navigate('/');
+          }
+        }}
         onBrandClick={() => navigate('/')}
       />
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
 import { analysesService } from '../../services/analyses.service';
 import type { AnalysisCategory } from '../../types/analysis';
@@ -7,6 +7,8 @@ import { UploadDropzone } from './components/UploadDropzone';
 
 export const UploadAnalysisScreen: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const projectParam = searchParams.get('project') || undefined;
 
   // Estados del formulario
   const [title, setTitle] = useState('');
@@ -55,6 +57,7 @@ export const UploadAnalysisScreen: React.FC = () => {
           city: city.trim(),
           quadrant: quadrant.trim() || undefined,
           category,
+          projectSlug: projectParam,
           imageBeforeFile: imageBefore,
           imageAfterFile: imageAfter,
           pdfReportFile: pdfReport,
@@ -87,7 +90,10 @@ export const UploadAnalysisScreen: React.FC = () => {
       {/* TopNavBar con navegación de retorno */}
       <TopNavBar
         isDetailView={true}
-        onBackClick={() => navigate('/')}
+        backLabel={projectParam ? 'Volver al Proyecto' : 'Volver a Proyectos'}
+        onBackClick={() =>
+          navigate(projectParam ? `/proyectos/${projectParam}` : '/')
+        }
         onBrandClick={() => navigate('/')}
       />
 
