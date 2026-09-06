@@ -1,49 +1,64 @@
-import React from 'react';
-import type { AnalysisCategory, AnalysisStatus } from '../../../types/analysis';
+import React, { useEffect, useState } from 'react';
+import { categoriesService } from '../../../services/categories.service';
+import type { Category } from '../../../types/category';
 
 interface FilterBarProps {
-  currentCategory: AnalysisCategory | 'todos';
-  onSelectCategory: (category: AnalysisCategory | 'todos') => void;
-  currentStatus: AnalysisStatus | 'todos';
-  onSelectStatus: (status: AnalysisStatus | 'todos') => void;
+  currentCategory: string | 'todos';
+  onSelectCategory: (categorySlug: string | 'todos') => void;
   onClearFilters: () => void;
   isFiltered: boolean;
 }
 
-interface CategoryOption {
-  id: AnalysisCategory | 'todos';
-  label: string;
-  icon: string;
-}
-
-const CATEGORIES: CategoryOption[] = [
-  { id: 'todos', label: 'Todos los estudios', icon: 'grid_view' },
-  { id: 'movilidad', label: 'Movilidad Urbana', icon: 'insights' },
-  { id: 'topografia', label: 'Topografía', icon: 'terrain' },
-  { id: 'demografia', label: 'Demografía', icon: 'group' },
-  { id: 'medio_ambiente', label: 'Medio Ambiente', icon: 'eco' },
-  { id: 'catastro', label: 'Catastro', icon: 'domain' },
-];
-
 export const FilterBar: React.FC<FilterBarProps> = ({
   currentCategory,
   onSelectCategory,
-  currentStatus,
-  onSelectStatus,
   onClearFilters,
   isFiltered,
 }) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    categoriesService
+      .getCategories('analysis')
+      .then((cats) => {
+        if (isMounted) setCategories(cats);
+      })
+      .catch((err) => {
+        console.error('Error al obtener categorías de análisis para FilterBar:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
       {/* Category Chips List */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
-        {CATEGORIES.map((cat) => {
-          const isActive = currentCategory === cat.id;
+        <button
+          type="button"
+          onClick={() => onSelectCategory('todos')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-['Inter'] transition-all duration-150 cursor-pointer whitespace-nowrap ${
+            currentCategory === 'todos'
+              ? 'bg-[#7bd0ff]/20 text-[#7bd0ff] border border-[#7bd0ff]/50 font-semibold shadow-sm shadow-[#7bd0ff]/10'
+              : 'bg-[#122131]/80 hover:bg-[#1c2b3c] text-[#c6c6cd] border border-white/5 hover:text-[#d4e4fa]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            grid_view
+          </span>
+          <span>Todos los estudios</span>
+        </button>
+
+        {categories.map((cat) => {
+          const isActive = currentCategory === cat.slug;
           return (
             <button
-              key={cat.id}
+              key={cat.slug}
               type="button"
-              onClick={() => onSelectCategory(cat.id)}
+              onClick={() => onSelectCategory(cat.slug)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-['Inter'] transition-all duration-150 cursor-pointer whitespace-nowrap ${
                 isActive
                   ? 'bg-[#7bd0ff]/20 text-[#7bd0ff] border border-[#7bd0ff]/50 font-semibold shadow-sm shadow-[#7bd0ff]/10'
@@ -51,36 +66,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">
-                {cat.icon}
+                {cat.icon || 'folder'}
               </span>
-              <span>{cat.label}</span>
+              <span>{cat.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Status Filter & Reset */}
-      <div className="flex items-center gap-2 self-end sm:self-auto">
-        <div className="relative">
-          <select
-            aria-label="Filtrar por estado del análisis"
-            value={currentStatus}
-            onChange={(e) =>
-              onSelectStatus(e.target.value as AnalysisStatus | 'todos')
-            }
-            className="bg-[#122131]/90 hover:bg-[#1c2b3c] border border-white/10 text-[#d4e4fa] text-xs font-['Inter'] rounded-lg px-3 py-1.5 outline-none focus:border-[#7bd0ff] transition-colors cursor-pointer appearance-none pr-7"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="activo">Solo Activos</option>
-            <option value="completado">Solo Completados</option>
-            <option value="en_proceso">En Proceso</option>
-          </select>
-          <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[#909097] text-[16px] pointer-events-none">
-            expand_more
-          </span>
-        </div>
-
-        {isFiltered && (
+      {/* Botón para restablecer / limpiar filtros */}
+      {isFiltered && (
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
             onClick={onClearFilters}
@@ -90,10 +86,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <span className="material-symbols-outlined text-[14px]">
               filter_alt_off
             </span>
-            <span className="hidden sm:inline">Limpiar</span>
+            <span>Limpiar filtros</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

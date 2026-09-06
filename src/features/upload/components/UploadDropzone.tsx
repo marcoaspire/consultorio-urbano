@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 interface UploadDropzoneProps {
   label: string;
-  fileType: 'image' | 'pdf';
+  fileType: 'image' | 'pdf' | 'video';
   file: File | null;
   onFileChange: (file: File | null) => void;
   maxSizeMB?: number;
@@ -66,6 +66,16 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
         onFileChange(null);
         return false;
       }
+    } else if (fileType === 'video') {
+      const isVideoMime = candidateFile.type.startsWith('video/');
+      const isVideoExt = /\.(mp4|webm|ogg|mov|mkv)$/i.test(candidateFile.name);
+      if (!isVideoMime && !isVideoExt) {
+        setErrorMessage(
+          `Formato inválido: "${candidateFile.name}". Solo se admiten archivos de video (MP4, WEBM, MOV).`
+        );
+        onFileChange(null);
+        return false;
+      }
     }
 
     // Validación de tamaño máximo
@@ -113,6 +123,9 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     onFileChange(null);
     setErrorMessage(null);
     if (inputRef.current) {
@@ -120,11 +133,19 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
     }
   };
 
-  const acceptAttribute = fileType === 'image' ? 'image/*' : '.pdf,application/pdf';
+  const acceptAttribute =
+    fileType === 'image'
+      ? 'image/*'
+      : fileType === 'video'
+      ? 'video/*,.mp4,.webm,.mov'
+      : '.pdf,application/pdf';
+
   const defaultHelper =
     helperText ||
     (fileType === 'image'
       ? 'PNG, JPG, TIFF hasta 25MB'
+      : fileType === 'video'
+      ? 'MP4, WEBM o MOV hasta 50MB'
       : 'PDF hasta 25MB');
 
   const formatFileSize = (bytes: number) => {
@@ -171,6 +192,12 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
                   className="w-full h-full object-cover"
                 />
               </div>
+            ) : fileType === 'video' ? (
+              <div className="w-12 h-12 rounded-lg bg-[#7bd0ff]/20 border border-[#7bd0ff]/30 flex items-center justify-center text-[#7bd0ff] shrink-0">
+                <span className="material-symbols-outlined text-2xl">
+                  movie
+                </span>
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-lg bg-[#93000a]/20 border border-[#ffb4ab]/20 flex items-center justify-center text-[#ffb4ab] shrink-0">
                 <span className="material-symbols-outlined text-2xl">
@@ -205,11 +232,15 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
             <span className="material-symbols-outlined text-3xl sm:text-4xl text-[#909097] group-hover:text-[#7bd0ff] mb-2 transition-colors">
               {fileType === 'image'
                 ? 'add_photo_alternate'
+                : fileType === 'video'
+                ? 'videocam'
                 : 'picture_as_pdf'}
             </span>
             <span className="font-['Inter'] text-xs sm:text-sm font-medium text-[#c6c6cd] group-hover:text-[#d4e4fa] transition-colors">
               {fileType === 'image'
                 ? 'Arrastre la imagen o haga clic'
+                : fileType === 'video'
+                ? 'Arrastre el video o haga clic'
                 : 'Arrastre el PDF de metadatos o haga clic'}
             </span>
             <span className="font-['Inter'] text-[11px] text-[#909097] mt-1">

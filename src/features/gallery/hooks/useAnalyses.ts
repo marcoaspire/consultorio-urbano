@@ -2,26 +2,23 @@ import { useCallback, useEffect, useState } from 'react';
 import { analysesService } from '../../../services/analyses.service';
 import type {
   Analysis,
-  AnalysisCategory,
-  AnalysisStatus,
   PaginatedResponse,
 } from '../../../types/analysis';
 
-
 interface UseAnalysesOptions {
   initialLimit?: number;
-  initialCategory?: AnalysisCategory | 'todos';
+  initialCategory?: string | 'todos';
+  projectSlug?: string;
 }
 
 export function useAnalyses(options: UseAnalysesOptions = {}) {
-  const { initialLimit = 8, initialCategory = 'todos' } = options;
+  const { initialLimit = 8, initialCategory = 'todos', projectSlug } = options;
 
   const [page, setPageState] = useState(1);
   const [limit] = useState(initialLimit);
-  const [category, setCategoryState] = useState<AnalysisCategory | 'todos'>(
+  const [categorySlug, setCategorySlugState] = useState<string | 'todos'>(
     initialCategory
   );
-  const [status, setStatusState] = useState<AnalysisStatus | 'todos'>('todos');
   const [search, setSearchState] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -55,9 +52,9 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
   }, []);
 
   const setCategory = useCallback(
-    (newCategory: AnalysisCategory | 'todos') => {
+    (newCategory: string | 'todos') => {
       setIsLoading(true);
-      setCategoryState(newCategory);
+      setCategorySlugState(newCategory);
       setPageState(1);
     },
     []
@@ -69,21 +66,15 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     setPageState(1);
   }, []);
 
-  const setStatus = useCallback((newStatus: AnalysisStatus | 'todos') => {
-    setIsLoading(true);
-    setStatusState(newStatus);
-    setPageState(1);
-  }, []);
-
   // Función de consulta al backend
   const fetchAnalyses = useCallback(async () => {
     try {
       const response = await analysesService.getAnalyses({
         page,
         limit,
-        category,
-        status,
+        category_slug: categorySlug,
         search: debouncedSearch,
+        projectSlug,
       });
 
       setData(response.data);
@@ -105,7 +96,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, category, status, debouncedSearch]);
+  }, [page, limit, categorySlug, debouncedSearch, projectSlug]);
 
   useEffect(() => {
     let ignore = false;
@@ -115,9 +106,9 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
         const response = await analysesService.getAnalyses({
           page,
           limit,
-          category,
-          status,
+          category_slug: categorySlug,
           search: debouncedSearch,
+          projectSlug,
         });
 
         if (!ignore) {
@@ -152,8 +143,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     return () => {
       ignore = true;
     };
-  }, [page, limit, category, status, debouncedSearch]);
-
+  }, [page, limit, categorySlug, debouncedSearch, projectSlug]);
 
   return {
     analyses: data,
@@ -161,12 +151,10 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     isLoading,
     error,
     page,
-    category,
-    status,
+    category: categorySlug,
     search,
     setPage,
     setCategory,
-    setStatus,
     setSearch,
     refetch: fetchAnalyses,
   };
