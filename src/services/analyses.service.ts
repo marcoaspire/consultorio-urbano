@@ -189,7 +189,7 @@ export const analysesService = {
         title: row.title,
         description: row.description,
         city: row.city,
-        category_slug: row.category_slug || row.category,
+        category_slug: row.category_slug,
         category: categoryObj,
         thumbnail_url: getAssetPublicUrl(thumb),
         video_url: row.video_url ? getAssetPublicUrl(row.video_url) : undefined,
@@ -257,7 +257,7 @@ export const analysesService = {
       title: data.title,
       description: data.description,
       city: data.city,
-      category_slug: data.category_slug || data.category,
+      category_slug: data.category_slug,
       category: categoryObj,
       thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
       video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
@@ -314,7 +314,7 @@ export const analysesService = {
       title: data.title,
       description: data.description,
       city: data.city,
-      category_slug: data.category_slug || data.category,
+      category_slug: data.category_slug,
       category: categoryObj,
       thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
       video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
@@ -478,29 +478,29 @@ export const analysesService = {
       file_size_bytes?: number;
       metadata?: Record<string, unknown>;
     }> = [
-      {
-        analysis_id: createdAnalysis.id,
-        asset_type: 'image_before',
-        storage_path: beforeStoragePath,
-        mime_type: dto.imageBeforeFile?.type || 'image/jpeg',
-        file_size_bytes: dto.imageBeforeFile?.size || 1024 * 1024 * 2,
-        metadata: {
-          label: 'Histórico (Previa)',
-          year: String(new Date().getFullYear() - 2),
+        {
+          analysis_id: createdAnalysis.id,
+          asset_type: 'image_before',
+          storage_path: beforeStoragePath,
+          mime_type: dto.imageBeforeFile?.type || 'image/jpeg',
+          file_size_bytes: dto.imageBeforeFile?.size || 1024 * 1024 * 2,
+          metadata: {
+            label: 'Histórico (Previa)',
+            year: String(new Date().getFullYear() - 2),
+          },
         },
-      },
-      {
-        analysis_id: createdAnalysis.id,
-        asset_type: 'image_after',
-        storage_path: afterStoragePath,
-        mime_type: dto.imageAfterFile?.type || 'image/jpeg',
-        file_size_bytes: dto.imageAfterFile?.size || 1024 * 1024 * 3,
-        metadata: {
-          label: 'Actual (Reciente)',
-          year: String(new Date().getFullYear()),
+        {
+          analysis_id: createdAnalysis.id,
+          asset_type: 'image_after',
+          storage_path: afterStoragePath,
+          mime_type: dto.imageAfterFile?.type || 'image/jpeg',
+          file_size_bytes: dto.imageAfterFile?.size || 1024 * 1024 * 3,
+          metadata: {
+            label: 'Actual (Reciente)',
+            year: String(new Date().getFullYear()),
+          },
         },
-      },
-    ];
+      ];
 
     if (pdfStoragePath) {
       assetsToInsert.push({

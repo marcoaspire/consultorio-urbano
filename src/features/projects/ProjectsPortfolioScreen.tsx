@@ -158,11 +158,10 @@ export const ProjectsPortfolioScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => setCategorySlug('todos')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${
-                categorySlug === 'todos'
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${categorySlug === 'todos'
                   ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
                   : 'bg-[#122131]/80 hover:bg-[#1c2b3c] text-[#bec6e0] border border-white/5'
-              }`}
+                }`}
             >
               <span className="material-symbols-outlined text-[16px]">
                 grid_view
@@ -177,11 +176,10 @@ export const ProjectsPortfolioScreen: React.FC = () => {
                   key={cat.slug}
                   type="button"
                   onClick={() => setCategorySlug(cat.slug)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-['Inter'] font-medium transition-all duration-200 cursor-pointer ${isActive
                       ? 'bg-[#7bd0ff] text-[#051424] font-semibold shadow-md shadow-[#7bd0ff]/20'
                       : 'bg-[#122131]/80 hover:bg-[#1c2b3c] text-[#bec6e0] border border-white/5'
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[16px]">
                     {cat.icon || 'folder'}
