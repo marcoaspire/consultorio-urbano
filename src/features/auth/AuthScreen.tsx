@@ -146,17 +146,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialTab = 'login' }) 
         <div className="absolute inset-0 bg-gradient-to-r from-[#051424] via-transparent to-[#051424]" />
       </div>
 
-      {/* Botón flotante para regresar al inicio */}
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        className="absolute top-5 left-5 z-20 flex items-center gap-1.5 text-xs text-[#c6c6cd] hover:text-[#d4e4fa] bg-[#051424]/70 hover:bg-[#122131] border border-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md transition-all cursor-pointer"
-        title="Volver a la Galería"
-      >
-        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-        <span>Volver al inicio</span>
-      </button>
-
       {/* Contenedor Principal de la Tarjeta */}
       <main className="relative z-10 w-full max-w-[440px] my-auto">
         {/* Brand Header */}

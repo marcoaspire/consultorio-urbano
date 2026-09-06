@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import { AuthScreen } from './features/auth/AuthScreen';
+import { ProtectedRoute } from './features/auth/components/ProtectedRoute';
+import { PublicOnlyRoute } from './features/auth/components/PublicOnlyRoute';
 import { AnalysisDetailScreen } from './features/comparison/AnalysisDetailScreen';
 import { HomeScreen } from './features/gallery/HomeScreen';
 import { ProjectsPortfolioScreen } from './features/projects/ProjectsPortfolioScreen';
@@ -11,24 +13,75 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Nivel 1: Portafolio Global de Proyectos / Terrenos */}
-          <Route path="/" element={<ProjectsPortfolioScreen />} />
+          {/* Rutas Públicas de Autenticación (Solo accesibles si NO está autenticado) */}
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <AuthScreen initialTab="login" />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <PublicOnlyRoute>
+                <AuthScreen initialTab="register" />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/auth"
+            element={
+              <PublicOnlyRoute>
+                <AuthScreen initialTab="login" />
+              </PublicOnlyRoute>
+            }
+          />
 
-          {/* Nivel 2: Índice de Análisis del Proyecto */}
-          <Route path="/proyectos/:projectSlug" element={<HomeScreen />} />
+          {/* Rutas Privadas Protegidas (Exigen usuario logueado, redirigen a /login) */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ProjectsPortfolioScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/proyectos"
+            element={
+              <ProtectedRoute>
+                <ProjectsPortfolioScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/proyectos/:projectSlug"
+            element={
+              <ProtectedRoute>
+                <HomeScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/nuevo"
+            element={
+              <ProtectedRoute>
+                <UploadAnalysisScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analisis/:slug"
+            element={
+              <ProtectedRoute>
+                <AnalysisDetailScreen />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Autenticación: Login y Registro */}
-          <Route path="/login" element={<AuthScreen initialTab="login" />} />
-          <Route path="/registro" element={<AuthScreen initialTab="register" />} />
-          <Route path="/auth" element={<AuthScreen initialTab="login" />} />
-
-          {/* Formulario de Carga y Publicación de Nuevo Análisis */}
-          <Route path="/nuevo" element={<UploadAnalysisScreen />} />
-
-          {/* Nivel 3: Detalle del Análisis / Estudio con Comparador y Visor PDF */}
-          <Route path="/analisis/:slug" element={<AnalysisDetailScreen />} />
-
-          {/* Redirección por defecto al Portafolio Global */}
+          {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
