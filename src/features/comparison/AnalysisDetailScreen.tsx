@@ -12,7 +12,6 @@ export const AnalysisDetailScreen: React.FC = () => {
 
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [mediaTab, setMediaTab] = useState<'comparador' | 'video'>('comparador');
 
   useEffect(() => {
@@ -41,11 +40,6 @@ export const AnalysisDetailScreen: React.FC = () => {
       ignore = true;
     };
   }, [slug]);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
 
   // Extraer imágenes antes/después del análisis
   const beforeAsset = analysis?.assets?.find(
@@ -118,25 +112,6 @@ export const AnalysisDetailScreen: React.FC = () => {
         onBackClick={() => navigate(-1)}
         onBrandClick={() => navigate('/')}
       />
-
-      {/* Toast de confirmación para acciones */}
-      {toastMessage && (
-        <div className="bg-[#122131] border-b border-[#7bd0ff]/30 text-[#7bd0ff] px-4 py-2.5 text-xs sm:text-sm font-['Inter'] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top duration-300">
-          <div className="flex items-center gap-2 max-w-[1600px] mx-auto w-full">
-            <span className="material-symbols-outlined text-[#7bd0ff] text-[18px]">
-              check_circle
-            </span>
-            <span>{toastMessage}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-[#909097] hover:text-white cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        </div>
-      )}
 
       {/* Contenido Principal */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
@@ -216,30 +191,6 @@ export const AnalysisDetailScreen: React.FC = () => {
                     </>
                   )}
                 </p>
-              </div>
-
-              {/* Botones de acción superior */}
-              <div className="flex items-center gap-2.5 self-end md:self-auto">
-                <button
-                  type="button"
-                  onClick={() => showToast('Enlace permanente copiado al portapapeles')}
-                  className="glass-panel p-2 rounded-lg text-[#d4e4fa] hover:text-[#7bd0ff] hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer"
-                  title="Compartir análisis"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    share
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => showToast('Estado del visor guardado en la sesión')}
-                  className="glass-panel px-3.5 py-2 rounded-lg text-[#bec6e0] hover:text-[#d4e4fa] hover:bg-[#bec6e0]/10 border border-[#bec6e0]/30 transition-colors flex items-center gap-2 font-['Inter'] text-xs font-semibold cursor-pointer active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    save
-                  </span>
-                  <span>Guardar Estado</span>
-                </button>
               </div>
             </header>
 
