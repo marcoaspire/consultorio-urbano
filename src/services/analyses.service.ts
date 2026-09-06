@@ -23,7 +23,6 @@ export const analysesService = {
       limit = 8,
       search = '',
       category = 'todos',
-      status = 'todos',
       projectSlug,
     } = params;
 
@@ -42,11 +41,6 @@ export const analysesService = {
     // Filtro por categoría en servidor
     if (category && category !== 'todos') {
       filtered = filtered.filter((item) => item.category === category);
-    }
-
-    // Filtro por estado en servidor
-    if (status && status !== 'todos') {
-      filtered = filtered.filter((item) => item.status === status);
     }
 
     // Filtro textual por búsqueda (título, descripción, ciudad)
@@ -196,7 +190,6 @@ export const analysesService = {
       city: dto.city.trim(),
       quadrant: dto.quadrant?.trim() || 'Sector Central',
       category: dto.category,
-      status: 'activo',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       relative_time: 'Hace unos momentos',

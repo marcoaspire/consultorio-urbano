@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Analysis, AnalysisCategory, AnalysisStatus } from '../../../types/analysis';
+import type { Analysis, AnalysisCategory } from '../../../types/analysis';
 
 interface AnalysisCardProps {
   analysis: Analysis;
@@ -18,43 +18,22 @@ const CATEGORY_CONFIG: Record<
   topografia: {
     label: 'Topografía',
     icon: 'terrain',
-    colorClass: 'text-[#ffb690]',
+    colorClass: 'text-[#ec6a06]',
   },
   demografia: {
     label: 'Demografía',
     icon: 'group',
-    colorClass: 'text-[#c4e7ff]',
+    colorClass: 'text-[#c084fc]',
   },
   medio_ambiente: {
     label: 'Medio Ambiente',
     icon: 'eco',
-    colorClass: 'text-[#86efac]',
+    colorClass: 'text-[#4ade80]',
   },
   catastro: {
     label: 'Catastro',
     icon: 'domain',
     colorClass: 'text-[#fde047]',
-  },
-};
-
-const STATUS_CONFIG: Record<
-  AnalysisStatus,
-  { label: string; dotClass: string; bgClass: string }
-> = {
-  activo: {
-    label: 'Activo',
-    dotClass: 'bg-[#7bd0ff] animate-pulse',
-    bgClass: 'bg-[#051424]/80 text-[#d4e4fa] border-white/10',
-  },
-  completado: {
-    label: 'Completado',
-    dotClass: 'bg-[#4ade80]',
-    bgClass: 'bg-[#051424]/80 text-[#d4e4fa] border-white/10',
-  },
-  en_proceso: {
-    label: 'En Proceso',
-    dotClass: 'bg-[#fb923c]',
-    bgClass: 'bg-[#051424]/80 text-[#d4e4fa] border-white/10',
   },
 };
 
@@ -64,7 +43,6 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
 }) => {
   const categoryInfo =
     CATEGORY_CONFIG[analysis.category] || CATEGORY_CONFIG.movilidad;
-  const statusInfo = STATUS_CONFIG[analysis.status] || STATUS_CONFIG.activo;
 
   const hasPdf = analysis.assets?.some((a) => a.asset_type === 'pdf_report');
   const hasMultipleImages =
@@ -89,19 +67,6 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
           decoding="async"
           className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500 scale-105 group-hover:scale-100"
         />
-
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
-          {/* Status Badge */}
-          <div
-            className={`backdrop-blur-md px-2.5 py-0.5 rounded-full border text-[11px] font-['Inter'] font-medium flex items-center gap-1.5 shadow-sm ${statusInfo.bgClass}`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${statusInfo.dotClass}`}
-            />
-            <span>{statusInfo.label}</span>
-          </div>
-        </div>
 
         {/* City Location Pill */}
         <div className="absolute top-3 right-3 bg-[#051424]/80 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[11px] font-['Inter'] text-[#c6c6cd] flex items-center gap-1">

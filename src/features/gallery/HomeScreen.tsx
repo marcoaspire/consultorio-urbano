@@ -56,11 +56,9 @@ export const HomeScreen: React.FC = () => {
     pagination,
     isLoading,
     category,
-    status,
     search,
     setPage,
     setCategory,
-    setStatus,
     setSearch,
   } = useAnalyses({
     initialLimit: 8,
@@ -71,7 +69,6 @@ export const HomeScreen: React.FC = () => {
 
   const handleClearFilters = () => {
     setCategory('todos');
-    setStatus('todos');
     setSearch('');
   };
 
@@ -83,8 +80,7 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  const isFiltered =
-    category !== 'todos' || status !== 'todos' || Boolean(search.trim());
+  const isFiltered = category !== 'todos' || Boolean(search.trim());
 
   return (
     <div className="min-h-screen bg-[#051424] text-[#d4e4fa] flex flex-col antialiased">
@@ -134,8 +130,6 @@ export const HomeScreen: React.FC = () => {
         <FilterBar
           currentCategory={category}
           onSelectCategory={setCategory}
-          currentStatus={status}
-          onSelectStatus={setStatus}
           onClearFilters={handleClearFilters}
           isFiltered={isFiltered}
         />

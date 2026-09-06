@@ -10,8 +10,6 @@ export type AnalysisCategory =
   | 'medio_ambiente'
   | 'catastro';
 
-export type AnalysisStatus = 'activo' | 'completado' | 'en_proceso';
-
 export type AssetType =
   | 'image_before'
   | 'image_after'
@@ -71,7 +69,6 @@ export interface Analysis {
   city: string;
   quadrant?: string; // ej: 'Cuadrante Norte'
   category: AnalysisCategory;
-  status: AnalysisStatus;
   created_at: string; // TIMESTAMPTZ ISO
   updated_at: string; // TIMESTAMPTZ ISO
   assets?: AnalysisAsset[];
@@ -92,7 +89,6 @@ export interface AnalysisQueryParams {
   limit: number;
   search?: string;
   category?: AnalysisCategory | 'todos';
-  status?: AnalysisStatus | 'todos';
   sortBy?: 'date_desc' | 'date_asc' | 'title_asc';
   projectSlug?: string; // Filtro por proyecto en Nivel 2
 }

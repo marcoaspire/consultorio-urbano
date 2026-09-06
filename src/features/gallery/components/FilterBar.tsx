@@ -1,11 +1,9 @@
 import React from 'react';
-import type { AnalysisCategory, AnalysisStatus } from '../../../types/analysis';
+import type { AnalysisCategory } from '../../../types/analysis';
 
 interface FilterBarProps {
   currentCategory: AnalysisCategory | 'todos';
   onSelectCategory: (category: AnalysisCategory | 'todos') => void;
-  currentStatus: AnalysisStatus | 'todos';
-  onSelectStatus: (status: AnalysisStatus | 'todos') => void;
   onClearFilters: () => void;
   isFiltered: boolean;
 }
@@ -28,8 +26,6 @@ const CATEGORIES: CategoryOption[] = [
 export const FilterBar: React.FC<FilterBarProps> = ({
   currentCategory,
   onSelectCategory,
-  currentStatus,
-  onSelectStatus,
   onClearFilters,
   isFiltered,
 }) => {
@@ -59,28 +55,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         })}
       </div>
 
-      {/* Status Filter & Reset */}
-      <div className="flex items-center gap-2 self-end sm:self-auto">
-        <div className="relative">
-          <select
-            aria-label="Filtrar por estado del análisis"
-            value={currentStatus}
-            onChange={(e) =>
-              onSelectStatus(e.target.value as AnalysisStatus | 'todos')
-            }
-            className="bg-[#122131]/90 hover:bg-[#1c2b3c] border border-white/10 text-[#d4e4fa] text-xs font-['Inter'] rounded-lg px-3 py-1.5 outline-none focus:border-[#7bd0ff] transition-colors cursor-pointer appearance-none pr-7"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="activo">Solo Activos</option>
-            <option value="completado">Solo Completados</option>
-            <option value="en_proceso">En Proceso</option>
-          </select>
-          <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[#909097] text-[16px] pointer-events-none">
-            expand_more
-          </span>
-        </div>
-
-        {isFiltered && (
+      {/* Botón para restablecer / limpiar filtros */}
+      {isFiltered && (
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
             type="button"
             onClick={onClearFilters}
@@ -90,10 +67,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <span className="material-symbols-outlined text-[14px]">
               filter_alt_off
             </span>
-            <span className="hidden sm:inline">Limpiar</span>
+            <span>Limpiar filtros</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

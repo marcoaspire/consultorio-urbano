@@ -3,10 +3,8 @@ import { analysesService } from '../../../services/analyses.service';
 import type {
   Analysis,
   AnalysisCategory,
-  AnalysisStatus,
   PaginatedResponse,
 } from '../../../types/analysis';
-
 
 interface UseAnalysesOptions {
   initialLimit?: number;
@@ -22,7 +20,6 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
   const [category, setCategoryState] = useState<AnalysisCategory | 'todos'>(
     initialCategory
   );
-  const [status, setStatusState] = useState<AnalysisStatus | 'todos'>('todos');
   const [search, setSearchState] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -70,12 +67,6 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     setPageState(1);
   }, []);
 
-  const setStatus = useCallback((newStatus: AnalysisStatus | 'todos') => {
-    setIsLoading(true);
-    setStatusState(newStatus);
-    setPageState(1);
-  }, []);
-
   // Función de consulta al backend
   const fetchAnalyses = useCallback(async () => {
     try {
@@ -83,7 +74,6 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
         page,
         limit,
         category,
-        status,
         search: debouncedSearch,
         projectSlug,
       });
@@ -107,7 +97,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, category, status, debouncedSearch, projectSlug]);
+  }, [page, limit, category, debouncedSearch, projectSlug]);
 
   useEffect(() => {
     let ignore = false;
@@ -118,7 +108,6 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
           page,
           limit,
           category,
-          status,
           search: debouncedSearch,
           projectSlug,
         });
@@ -155,8 +144,7 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     return () => {
       ignore = true;
     };
-  }, [page, limit, category, status, debouncedSearch, projectSlug]);
-
+  }, [page, limit, category, debouncedSearch, projectSlug]);
 
   return {
     analyses: data,
@@ -165,11 +153,9 @@ export function useAnalyses(options: UseAnalysesOptions = {}) {
     error,
     page,
     category,
-    status,
     search,
     setPage,
     setCategory,
-    setStatus,
     setSearch,
     refetch: fetchAnalyses,
   };
