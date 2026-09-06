@@ -211,9 +211,78 @@ export const projectsService = {
   },
 
   /**
+   * Actualiza los datos de un proyecto existente en Supabase.
+   */
+  async updateProject(id: string, dto: Partial<CreateProjectDTO>): Promise<Project> {
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (dto.name !== undefined) updateData.name = dto.name.trim();
+    if (dto.location !== undefined) updateData.location = dto.location.trim();
+    if (dto.category_slug !== undefined) updateData.category_slug = dto.category_slug;
+    if (dto.description !== undefined) updateData.description = dto.description.trim() || null;
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, category:categories(*), analyses:analyses(count)')
+      .single();
+
+    if (error) {
+      console.error('Error updating project in Supabase:', error);
+      throw error;
+    }
+
+    const analysesCount =
+      Array.isArray(data.analyses) && data.analyses[0]
+        ? (data.analyses[0] as { count: number }).count
+        : 0;
+
+    const categoryObj = data.category as Category | undefined;
+
+    return {
+      id: data.id,
+      slug: data.slug,
+      name: data.name,
+      location: data.location,
+      category_slug: data.category_slug,
+      category: categoryObj,
+      description: data.description || undefined,
+      thumbnail_url: data.thumbnail_url || undefined,
+      analyses_count: analysesCount,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      deleted_at: data.deleted_at,
+      relative_time: formatRelativeDate(data.created_at),
+    };
+  },
+
+  /**
    * Eliminación lógica (Soft Delete) de un proyecto.
+   * Regla de negocio: Si el proyecto tiene análisis activos, no se permite su eliminación.
    */
   async softDeleteProject(id: string): Promise<boolean> {
+    // 1. Verificar si existen análisis activos asociados al proyecto
+    const { count, error: countError } = await supabase
+      .from('analyses')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', id)
+      .is('deleted_at', null);
+
+    if (countError) {
+      console.error('Error verificando análisis del proyecto:', countError);
+      throw countError;
+    }
+
+    if (count && count > 0) {
+      throw new Error(
+        `No se puede eliminar este proyecto porque contiene ${count} análisis activo(s). Debes eliminar primero los análisis dentro del proyecto para poder eliminarlo.`
+      );
+    }
+
+    // 2. Proceder con el soft delete si no tiene análisis activos
     const { error } = await supabase
       .from('projects')
       .update({ deleted_at: new Date().toISOString() })

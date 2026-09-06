@@ -8,6 +8,8 @@ interface AnalysisGridProps {
   isLoading: boolean;
   limit: number;
   onSelectAnalysis?: (analysis: Analysis) => void;
+  onEditAnalysis?: (analysis: Analysis) => void;
+  onDeleteAnalysis?: (analysis: Analysis) => void;
   onResetFilters?: () => void;
 }
 
@@ -16,6 +18,8 @@ export const AnalysisGrid: React.FC<AnalysisGridProps> = ({
   isLoading,
   limit,
   onSelectAnalysis,
+  onEditAnalysis,
+  onDeleteAnalysis,
   onResetFilters,
 }) => {
   // Estado de carga inicial / cambio de página
@@ -68,6 +72,8 @@ export const AnalysisGrid: React.FC<AnalysisGridProps> = ({
           key={item.id}
           analysis={item}
           onClick={onSelectAnalysis}
+          onEdit={onEditAnalysis}
+          onDelete={onDeleteAnalysis}
         />
       ))}
     </div>

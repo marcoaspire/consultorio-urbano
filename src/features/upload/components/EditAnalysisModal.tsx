@@ -1,62 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { categoriesService } from '../../../services/categories.service';
+import type { Analysis } from '../../../types/analysis';
 import type { Category } from '../../../types/category';
-import type { CreateProjectDTO, Project } from '../../../types/project';
 
-interface NewProjectModalProps {
+interface EditAnalysisModalProps {
   isOpen: boolean;
+  analysis: Analysis | null;
   onClose: () => void;
-  onSubmit: (dto: CreateProjectDTO) => Promise<void>;
-  projectToEdit?: Project | null;
+  onSubmit: (dto: {
+    title: string;
+    city: string;
+    category_slug: string;
+    description: string;
+    videoUrl?: string;
+  }) => Promise<void>;
 }
 
-export const NewProjectModal: React.FC<NewProjectModalProps> = ({
+export const EditAnalysisModal: React.FC<EditAnalysisModalProps> = ({
   isOpen,
+  analysis,
   onClose,
   onSubmit,
-  projectToEdit,
 }) => {
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
+  const [title, setTitle] = useState('');
+  const [city, setCity] = useState('');
   const [categorySlug, setCategorySlug] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [description, setDescription] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isEditing = Boolean(projectToEdit);
-
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !analysis) return;
 
-    if (projectToEdit) {
-      setName(projectToEdit.name);
-      setLocation(projectToEdit.location);
-      setCategorySlug(projectToEdit.category_slug);
-      setDescription(projectToEdit.description || '');
-    } else {
-      setName('');
-      setLocation('');
-      setCategorySlug('');
-      setDescription('');
-    }
+    setTitle(analysis.title);
+    setCity(analysis.city);
+    setCategorySlug(analysis.category_slug);
+    setDescription(analysis.description);
+    setVideoUrl(analysis.video_url || '');
 
     let isMounted = true;
     setLoadingCategories(true);
 
     categoriesService
-      .getCategories('project')
+      .getCategories('analysis')
       .then((cats) => {
         if (isMounted) {
           setCategories(cats);
-          if (!projectToEdit && cats.length > 0) {
-            setCategorySlug(cats[0].slug);
-          }
         }
       })
       .catch((err) => {
-        console.error('Error al cargar categorías de proyecto:', err);
+        console.error('Error al cargar categorías de análisis:', err);
       })
       .finally(() => {
         if (isMounted) setLoadingCategories(false);
@@ -65,21 +61,21 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, projectToEdit]);
+  }, [isOpen, analysis]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !analysis) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!name.trim()) {
-      setError('El nombre del proyecto o terreno es obligatorio.');
+    if (!title.trim()) {
+      setError('El título del análisis es obligatorio.');
       return;
     }
 
-    if (!location.trim()) {
-      setError('La ciudad o ubicación es obligatoria.');
+    if (!city.trim()) {
+      setError('La ciudad o región es obligatoria.');
       return;
     }
 
@@ -88,25 +84,23 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
       return;
     }
 
+    if (!description.trim()) {
+      setError('La descripción técnica es obligatoria.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmit({
-        name: name.trim(),
-        location: location.trim(),
+        title: title.trim(),
+        city: city.trim(),
         category_slug: categorySlug,
-        description: description.trim() || undefined,
+        description: description.trim(),
+        videoUrl: videoUrl.trim() || undefined,
       });
-      // Resetear estado
-      setName('');
-      setLocation('');
-      setDescription('');
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : isEditing
-          ? 'Error al actualizar el proyecto'
-          : 'Error al registrar el proyecto'
+        err instanceof Error ? err.message : 'Error al actualizar el análisis'
       );
     } finally {
       setIsSubmitting(false);
@@ -115,19 +109,18 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#051424]/85 backdrop-blur-md animate-in fade-in duration-200">
-      {/* Contenedor del Modal Glassmorphism */}
       <div
         className="w-full max-w-lg bg-[#0c1c2e]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        {/* Encabezado del Modal */}
+        {/* Encabezado */}
         <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-[#122131]/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#ec6a06]/15 border border-[#ec6a06]/30 flex items-center justify-center text-[#ec6a06]">
+            <div className="w-8 h-8 rounded-lg bg-[#7bd0ff]/15 border border-[#7bd0ff]/30 flex items-center justify-center text-[#7bd0ff]">
               <span className="material-symbols-outlined text-[20px]">
-                {isEditing ? 'edit_location_alt' : 'add_location_alt'}
+                edit_note
               </span>
             </div>
             <div>
@@ -135,12 +128,10 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 id="modal-title"
                 className="font-['Montserrat'] font-bold text-lg text-[#d4e4fa] leading-tight"
               >
-                {isEditing ? 'Editar Proyecto / Terreno' : 'Nuevo Proyecto / Terreno'}
+                Editar Análisis Geoespacial
               </h2>
               <p className="font-['Inter'] text-xs text-[#909097] mt-0.5">
-                {isEditing
-                  ? 'Nivel 1: Modificar información de proyecto existente'
-                  : 'Nivel 1: Registrar nuevo territorio en el portafolio'}
+                Modificar la información descriptiva del estudio
               </p>
             </div>
           </div>
@@ -158,7 +149,6 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Mensaje de Error */}
           {error && (
             <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-lg text-red-200 text-xs font-['Inter'] flex items-center gap-2">
               <span className="material-symbols-outlined text-red-400 text-[18px]">
@@ -168,45 +158,40 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
             </div>
           )}
 
-          {/* 1. Nombre del Proyecto / Terreno (Obligatorio) */}
+          {/* Título */}
           <div className="space-y-1.5">
             <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
-              Nombre del Proyecto / Terreno <span className="text-[#ec6a06]">*</span>
+              Título del Análisis <span className="text-[#ec6a06]">*</span>
             </label>
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: Evaluación de Terreno B-42, Polígono Norte..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej: Mapa Topográfico Q3 2023"
               className="w-full bg-[#1c2b3c]/80 border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] placeholder-[#909097] font-['Inter'] outline-none transition-colors"
             />
           </div>
 
-          {/* 2. Ciudad / Ubicación (Obligatorio) */}
+          {/* Ciudad */}
           <div className="space-y-1.5">
             <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
-              Ciudad / Ubicación <span className="text-[#ec6a06]">*</span>
+              Ciudad / Región <span className="text-[#ec6a06]">*</span>
             </label>
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-2.5 text-[#909097] text-[18px] pointer-events-none">
-                pin_drop
-              </span>
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Ej: Santiago, Chile / Medellín, Colombia..."
-                className="w-full bg-[#1c2b3c]/80 border border-white/10 focus:border-[#7bd0ff] rounded-lg pl-9 pr-3.5 py-2 text-sm text-[#d4e4fa] placeholder-[#909097] font-['Inter'] outline-none transition-colors"
-              />
-            </div>
+            <input
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Ej: Santiago, Madrid"
+              className="w-full bg-[#1c2b3c]/80 border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] placeholder-[#909097] font-['Inter'] outline-none transition-colors"
+            />
           </div>
 
-          {/* 3. Categoría Principal (Selector Dinámico) */}
+          {/* Categoría */}
           <div className="space-y-1.5">
             <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
-              Categoría Principal <span className="text-[#ec6a06]">*</span>
+              Categoría Geoespacial <span className="text-[#ec6a06]">*</span>
             </label>
             {loadingCategories ? (
               <div className="w-full bg-[#1c2b3c] border border-white/10 rounded-lg px-3.5 py-2 text-xs text-[#909097] font-['Inter'] flex items-center gap-2">
@@ -228,21 +213,36 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
             )}
           </div>
 
-          {/* 4. Descripción General (Opcional) */}
+          {/* Video URL */}
           <div className="space-y-1.5">
             <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
-              Descripción General <span className="text-[#909097] font-normal">(opcional)</span>
+              URL de Video (YouTube / Vimeo / MP4) <span className="text-[#909097] font-normal">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://youtu.be/... o URL de archivo de video"
+              className="w-full bg-[#1c2b3c]/80 border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] placeholder-[#909097] font-['Inter'] outline-none transition-colors"
+            />
+          </div>
+
+          {/* Descripción */}
+          <div className="space-y-1.5">
+            <label className="block font-['Inter'] text-xs font-semibold text-[#bec6e0]">
+              Descripción Técnica <span className="text-[#ec6a06]">*</span>
             </label>
             <textarea
-              rows={3}
+              rows={4}
+              required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Breve reseña sobre el objetivo de análisis territorial, área de interés o antecedentes..."
+              placeholder="Descripción detallada de la metodología o hallazgos..."
               className="w-full bg-[#1c2b3c]/80 border border-white/10 focus:border-[#7bd0ff] rounded-lg px-3.5 py-2 text-sm text-[#d4e4fa] placeholder-[#909097] font-['Inter'] outline-none transition-colors resize-none"
             />
           </div>
 
-          {/* Botones de Acción */}
+          {/* Acciones */}
           <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
             <button
               type="button"
@@ -261,14 +261,14 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
               {isSubmitting ? (
                 <>
                   <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  <span>{isEditing ? 'Guardando...' : 'Creando...'}</span>
+                  <span>Guardando...</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[18px]">
                     check
                   </span>
-                  <span>{isEditing ? 'Guardar Cambios' : 'Crear Proyecto'}</span>
+                  <span>Guardar Cambios</span>
                 </>
               )}
             </button>

@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
+import { analysesService } from '../../services/analyses.service';
 import { projectsService } from '../../services/projects.service';
+import type { Analysis } from '../../types/analysis';
 import type { Project } from '../../types/project';
+import { EditAnalysisModal } from '../upload/components/EditAnalysisModal';
 import { AnalysisGrid } from './components/AnalysisGrid';
 import { FilterBar } from './components/FilterBar';
 import { GalleryHeader } from './components/GalleryHeader';
@@ -16,6 +19,11 @@ export const HomeScreen: React.FC = () => {
   // Estado del proyecto actual (Nivel 2)
   const [project, setProject] = useState<Project | null>(null);
   const [isProjectLoading, setIsProjectLoading] = useState(Boolean(projectSlug));
+
+  // Estados de edición y eliminación lógica de Análisis
+  const [analysisToEdit, setAnalysisToEdit] = useState<Analysis | null>(null);
+  const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
+  const [isDeletingAnalysis, setIsDeletingAnalysis] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -60,6 +68,7 @@ export const HomeScreen: React.FC = () => {
     setPage,
     setCategory,
     setSearch,
+    refetch,
   } = useAnalyses({
     initialLimit: 8,
     projectSlug,
@@ -77,6 +86,37 @@ export const HomeScreen: React.FC = () => {
       navigate(`/nuevo?project=${projectSlug}`);
     } else {
       navigate('/nuevo');
+    }
+  };
+
+  // Handler de actualización de análisis
+  const handleUpdateAnalysis = async (dto: {
+    title: string;
+    city: string;
+    category_slug: string;
+    description: string;
+    videoUrl?: string;
+  }) => {
+    if (!analysisToEdit) return;
+    await analysesService.updateAnalysis(analysisToEdit.id, dto);
+    setAnalysisToEdit(null);
+    setNotification('Análisis actualizado con éxito.');
+    refetch();
+  };
+
+  // Handler de eliminación lógica (Soft Delete) de análisis
+  const handleConfirmDeleteAnalysis = async () => {
+    if (!analysisToDelete) return;
+    setIsDeletingAnalysis(true);
+    try {
+      await analysesService.softDeleteAnalysis(analysisToDelete.id);
+      setNotification(`Análisis "${analysisToDelete.title}" eliminado (Soft Delete).`);
+      setAnalysisToDelete(null);
+      refetch();
+    } catch (err) {
+      console.error('Error soft-deleting analysis:', err);
+    } finally {
+      setIsDeletingAnalysis(false);
     }
   };
 
@@ -169,6 +209,8 @@ export const HomeScreen: React.FC = () => {
               isLoading={isLoading}
               limit={pagination.limit}
               onSelectAnalysis={(item) => navigate(`/analisis/${item.slug}`)}
+              onEditAnalysis={(item) => setAnalysisToEdit(item)}
+              onDeleteAnalysis={(item) => setAnalysisToDelete(item)}
               onResetFilters={handleClearFilters}
             />
           )}
@@ -188,6 +230,61 @@ export const HomeScreen: React.FC = () => {
           />
         )}
       </main>
+
+      {/* Modal de Edición de Análisis */}
+      <EditAnalysisModal
+        isOpen={Boolean(analysisToEdit)}
+        analysis={analysisToEdit}
+        onClose={() => setAnalysisToEdit(null)}
+        onSubmit={handleUpdateAnalysis}
+      />
+
+      {/* Modal de Confirmación de Soft Delete de Análisis */}
+      {analysisToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#051424]/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-[#0c1c2e] border border-red-500/30 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3 text-red-400">
+              <div className="w-10 h-10 rounded-full bg-red-950/60 border border-red-500/40 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">warning</span>
+              </div>
+              <h3 className="font-['Montserrat'] font-bold text-lg text-[#d4e4fa]">
+                ¿Eliminar análisis?
+              </h3>
+            </div>
+            <p className="font-['Inter'] text-sm text-[#bec6e0] leading-relaxed">
+              ¿Estás seguro de que deseas eliminar el análisis <strong className="text-white">"{analysisToDelete.title}"</strong>? Se realizará una eliminación lógica (Soft Delete) en la base de datos.
+            </p>
+            <div className="pt-2 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeletingAnalysis}
+                onClick={() => setAnalysisToDelete(null)}
+                className="px-4 py-2 rounded-lg text-xs font-['Inter'] font-medium text-[#bec6e0] hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingAnalysis}
+                onClick={handleConfirmDeleteAnalysis}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-['Inter'] font-semibold bg-red-600 hover:bg-red-500 text-white shadow-md transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingAnalysis ? (
+                  <>
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                    <span>Eliminar Análisis</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

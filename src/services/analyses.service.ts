@@ -571,6 +571,80 @@ export const analysesService = {
   },
 
   /**
+   * Actualiza los datos descriptivos de un análisis existente en Supabase.
+   */
+  async updateAnalysis(
+    id: string,
+    dto: {
+      title?: string;
+      description?: string;
+      city?: string;
+      category_slug?: string;
+      videoUrl?: string;
+    }
+  ): Promise<Analysis> {
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (dto.title !== undefined) updateData.title = dto.title.trim();
+    if (dto.description !== undefined) updateData.description = dto.description.trim();
+    if (dto.city !== undefined) updateData.city = dto.city.trim();
+    if (dto.category_slug !== undefined) updateData.category_slug = dto.category_slug;
+    if (dto.videoUrl !== undefined) updateData.video_url = dto.videoUrl.trim() || null;
+
+    const { data, error } = await supabase
+      .from('analyses')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, category:categories(*), assets:analysis_assets(*)')
+      .single();
+
+    if (error) {
+      console.error('Error updating analysis in Supabase:', error);
+      throw error;
+    }
+
+    const rawAssets = Array.isArray(data.assets) ? data.assets : [];
+    const activeAssets: AnalysisAsset[] = rawAssets
+      .filter((asset: AnalysisAsset) => !asset.deleted_at)
+      .map((asset: AnalysisAsset) => ({
+        id: asset.id,
+        analysis_id: asset.analysis_id,
+        asset_type: asset.asset_type,
+        storage_path: asset.storage_path,
+        public_url: getAssetPublicUrl(asset.storage_path),
+        mime_type: asset.mime_type,
+        file_size_bytes: asset.file_size_bytes,
+        metadata: asset.metadata,
+        created_at: asset.created_at,
+        updated_at: asset.updated_at,
+        deleted_at: asset.deleted_at,
+      }));
+
+    const categoryObj = data.category as Category | undefined;
+
+    return {
+      id: data.id,
+      slug: data.slug,
+      project_id: data.project_id,
+      title: data.title,
+      description: data.description,
+      city: data.city,
+      category_slug: data.category_slug,
+      category: categoryObj,
+      thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
+      video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
+      technical_summary: data.technical_summary || undefined,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      deleted_at: data.deleted_at,
+      relative_time: formatRelativeDate(data.created_at),
+      assets: activeAssets,
+    };
+  },
+
+  /**
    * Eliminación lógica (Soft Delete) de un análisis y sus assets asociados.
    */
   async softDeleteAnalysis(id: string): Promise<boolean> {
