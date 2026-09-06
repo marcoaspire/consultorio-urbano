@@ -69,12 +69,18 @@ export const AnalysisDetailScreen: React.FC = () => {
   const afterLabel =
     (afterAsset?.metadata?.label as string) || 'Actual (2023)';
 
+  // Extraer documento PDF si existe
+  const pdfAsset = analysis?.assets?.find(
+    (a) => a.asset_type === 'pdf_report'
+  );
+  const pdfUrl = pdfAsset?.storage_path;
+
   return (
     <div className="min-h-screen bg-[#051424] text-[#d4e4fa] flex flex-col font-['Inter'] antialiased overflow-x-hidden">
       {/* Top Navbar con botón de retorno al proyecto o portafolio */}
       <TopNavBar
         search=""
-        onSearchChange={() => {}}
+        onSearchChange={() => { }}
         isDetailView={true}
         backLabel={
           analysis?.project_slug ? 'Volver al Proyecto' : 'Volver a Proyectos'
@@ -216,6 +222,7 @@ export const AnalysisDetailScreen: React.FC = () => {
 
               {/* Columna Derecha: Visor de reporte PDF y métricas */}
               <PdfViewerPanel
+                pdfUrl={pdfUrl}
                 technicalSummary={analysis.technical_summary}
                 studyTitle={analysis.title}
               />

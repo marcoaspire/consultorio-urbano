@@ -137,6 +137,9 @@ export const analysesService = {
       : 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
 
     const pdfFilename = dto.pdfReportFile?.name || 'Reporte_Tecnico_Oficial.pdf';
+    const pdfUrl = dto.pdfReportFile
+      ? URL.createObjectURL(dto.pdfReportFile)
+      : `analyses/${slug}/${pdfFilename}`;
 
     const assets: import('../types/analysis').AnalysisAsset[] = [
       {
@@ -165,7 +168,6 @@ export const analysesService = {
         },
         created_at: new Date().toISOString(),
       },
-
     ];
 
     if (dto.pdfReportFile) {
@@ -173,7 +175,7 @@ export const analysesService = {
         id: `${id}-asset-pdf`,
         analysis_id: id,
         asset_type: 'pdf_report',
-        storage_path: `analyses/${slug}/${pdfFilename}`,
+        storage_path: pdfUrl,
         mime_type: dto.pdfReportFile.type || 'application/pdf',
         file_size_bytes: dto.pdfReportFile.size,
         metadata: { pages: 8 },
