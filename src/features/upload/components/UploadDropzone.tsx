@@ -14,7 +14,7 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   fileType,
   file,
   onFileChange,
-  maxSizeMB = 25,
+  maxSizeMB = 250,
   helperText,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -137,16 +137,16 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
     fileType === 'image'
       ? 'image/*'
       : fileType === 'video'
-      ? 'video/*,.mp4,.webm,.mov'
-      : '.pdf,application/pdf';
+        ? 'video/*,.mp4,.webm,.mov'
+        : '.pdf,application/pdf';
 
   const defaultHelper =
     helperText ||
     (fileType === 'image'
       ? 'PNG, JPG, TIFF hasta 25MB'
       : fileType === 'video'
-      ? 'MP4, WEBM o MOV hasta 50MB'
-      : 'PDF hasta 25MB');
+        ? 'MP4, WEBM o MOV hasta 50MB'
+        : 'PDF hasta 25MB');
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -165,13 +165,12 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 relative group overflow-hidden ${
-          isDragOver
+        className={`border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 relative group overflow-hidden ${isDragOver
             ? 'border-[#7bd0ff] bg-[#7bd0ff]/10 scale-[1.01]'
             : file
-            ? 'border-white/20 bg-[#122131]/90'
-            : 'border-[#45464d] hover:border-[#7bd0ff] bg-[#122131]/60 hover:bg-[#122131]/90'
-        }`}
+              ? 'border-white/20 bg-[#122131]/90'
+              : 'border-[#45464d] hover:border-[#7bd0ff] bg-[#122131]/60 hover:bg-[#122131]/90'
+          }`}
       >
         <input
           ref={inputRef}
@@ -233,15 +232,15 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
               {fileType === 'image'
                 ? 'add_photo_alternate'
                 : fileType === 'video'
-                ? 'videocam'
-                : 'picture_as_pdf'}
+                  ? 'videocam'
+                  : 'picture_as_pdf'}
             </span>
             <span className="font-['Inter'] text-xs sm:text-sm font-medium text-[#c6c6cd] group-hover:text-[#d4e4fa] transition-colors">
               {fileType === 'image'
                 ? 'Arrastre la imagen o haga clic'
                 : fileType === 'video'
-                ? 'Arrastre el video o haga clic'
-                : 'Arrastre el PDF de metadatos o haga clic'}
+                  ? 'Arrastre el video o haga clic'
+                  : 'Arrastre el PDF de metadatos o haga clic'}
             </span>
             <span className="font-['Inter'] text-[11px] text-[#909097] mt-1">
               {defaultHelper}

@@ -284,7 +284,8 @@ export const UploadAnalysisScreen: React.FC = () => {
                 fileType="image"
                 file={imageBefore}
                 onFileChange={setImageBefore}
-                helperText="PNG, JPG, WEBP o TIFF hasta 25MB"
+                maxSizeMB={250}
+                helperText="PNG, JPG, WEBP o TIFF hasta 250MB"
               />
 
               {/* Imagen Actual (Después) */}
@@ -293,7 +294,8 @@ export const UploadAnalysisScreen: React.FC = () => {
                 fileType="image"
                 file={imageAfter}
                 onFileChange={setImageAfter}
-                helperText="PNG, JPG, WEBP o TIFF hasta 25MB"
+                maxSizeMB={250}
+                helperText="PNG, JPG, WEBP o TIFF hasta 250MB"
               />
 
               {/* Documento Técnico PDF */}
@@ -302,7 +304,8 @@ export const UploadAnalysisScreen: React.FC = () => {
                 fileType="pdf"
                 file={pdfReport}
                 onFileChange={setPdfReport}
-                helperText="Documento PDF técnico hasta 25MB"
+                maxSizeMB={250}
+                helperText="Documento PDF técnico hasta 250MB"
               />
 
               {/* Recorrido en Video (Opcional - Requerimiento de Cliente) */}
