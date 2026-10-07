@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 antigravity
 .env
+client/.env
+server/.env
+*.env
