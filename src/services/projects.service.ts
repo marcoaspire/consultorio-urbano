@@ -161,8 +161,6 @@ export const projectsService = {
     const categoryThumbnails: Record<string, string> = {
       topografia:
         'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
-      catastro:
-        'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80',
       medio_ambiente:
         'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
       movilidad:

@@ -152,10 +152,11 @@ export const analysesService = {
     const validPage = Math.min(Math.max(1, page), totalPages);
 
     const mappedData: Analysis[] = (data || []).map((row) => {
-      // Filtrar assets activos (soft delete) y resolver public_url
+      // Filtrar assets activos (soft delete) descartando placeholders no auténticos
       const rawAssets = Array.isArray(row.assets) ? row.assets : [];
       const activeAssets: AnalysisAsset[] = rawAssets
         .filter((asset: AnalysisAsset) => !asset.deleted_at)
+        .filter((asset: AnalysisAsset) => !asset.storage_path?.includes('images.unsplash.com'))
         .map((asset: AnalysisAsset) => {
           const resolvedPublicUrl = getAssetPublicUrl(asset.storage_path);
           return {
@@ -173,13 +174,20 @@ export const analysesService = {
           };
         });
 
-      // Extraer miniatura resuelta
+      // Extraer miniatura resuelta (solo fuentes auténticas, sin Unsplash)
       const afterAsset = activeAssets.find((a) => a.asset_type === 'image_after');
+      const beforeAsset = activeAssets.find((a) => a.asset_type === 'image_before');
+      const cleanRowThumb =
+        row.thumbnail_url && !row.thumbnail_url.includes('images.unsplash.com')
+          ? row.thumbnail_url
+          : null;
       const thumb =
-        row.thumbnail_url ||
-        afterAsset?.public_url ||
-        'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80';
+        cleanRowThumb ||
+        afterAsset?.storage_path ||
+        beforeAsset?.storage_path ||
+        '';
 
+      const hasPdfAsset = activeAssets.some((a) => a.asset_type === 'pdf_report');
       const categoryObj = row.category as Category | undefined;
 
       return {
@@ -191,9 +199,9 @@ export const analysesService = {
         city: row.city,
         category_slug: row.category_slug,
         category: categoryObj,
-        thumbnail_url: getAssetPublicUrl(thumb),
+        thumbnail_url: thumb ? getAssetPublicUrl(thumb) : undefined,
         video_url: row.video_url ? getAssetPublicUrl(row.video_url) : undefined,
-        technical_summary: row.technical_summary || undefined,
+        technical_summary: hasPdfAsset ? (row.technical_summary || undefined) : undefined,
         created_at: row.created_at,
         updated_at: row.updated_at,
         deleted_at: row.deleted_at,
@@ -234,6 +242,7 @@ export const analysesService = {
     const rawAssets = Array.isArray(data.assets) ? data.assets : [];
     const activeAssets: AnalysisAsset[] = rawAssets
       .filter((asset: AnalysisAsset) => !asset.deleted_at)
+      .filter((asset: AnalysisAsset) => !asset.storage_path?.includes('images.unsplash.com'))
       .map((asset: AnalysisAsset) => ({
         id: asset.id,
         analysis_id: asset.analysis_id,
@@ -249,6 +258,11 @@ export const analysesService = {
       }));
 
     const categoryObj = data.category as Category | undefined;
+    const cleanThumb =
+      data.thumbnail_url && !data.thumbnail_url.includes('images.unsplash.com')
+        ? getAssetPublicUrl(data.thumbnail_url)
+        : undefined;
+    const hasPdfAsset = activeAssets.some((a) => a.asset_type === 'pdf_report');
 
     return {
       id: data.id,
@@ -259,9 +273,9 @@ export const analysesService = {
       city: data.city,
       category_slug: data.category_slug,
       category: categoryObj,
-      thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
+      thumbnail_url: cleanThumb,
       video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
-      technical_summary: data.technical_summary || undefined,
+      technical_summary: hasPdfAsset ? (data.technical_summary || undefined) : undefined,
       created_at: data.created_at,
       updated_at: data.updated_at,
       deleted_at: data.deleted_at,
@@ -276,7 +290,7 @@ export const analysesService = {
   async getAnalysisBySlug(slug: string): Promise<Analysis | null> {
     const { data, error } = await supabase
       .from('analyses')
-      .select('*, category:categories(*), assets:analysis_assets(*)')
+      .select('*, category:categories(*), assets:analysis_assets(*), projects(slug)')
       .eq('slug', slug.toLowerCase())
       .is('deleted_at', null)
       .maybeSingle();
@@ -291,6 +305,7 @@ export const analysesService = {
     const rawAssets = Array.isArray(data.assets) ? data.assets : [];
     const activeAssets: AnalysisAsset[] = rawAssets
       .filter((asset: AnalysisAsset) => !asset.deleted_at)
+      .filter((asset: AnalysisAsset) => !asset.storage_path?.includes('images.unsplash.com'))
       .map((asset: AnalysisAsset) => ({
         id: asset.id,
         analysis_id: asset.analysis_id,
@@ -306,19 +321,26 @@ export const analysesService = {
       }));
 
     const categoryObj = data.category as Category | undefined;
+    const cleanThumb =
+      data.thumbnail_url && !data.thumbnail_url.includes('images.unsplash.com')
+        ? getAssetPublicUrl(data.thumbnail_url)
+        : undefined;
+    const hasPdfAsset = activeAssets.some((a) => a.asset_type === 'pdf_report');
+    const projectSlug = (data.projects as { slug?: string } | null)?.slug;
 
     return {
       id: data.id,
       slug: data.slug,
       project_id: data.project_id,
+      project_slug: projectSlug,
       title: data.title,
       description: data.description,
       city: data.city,
       category_slug: data.category_slug,
       category: categoryObj,
-      thumbnail_url: data.thumbnail_url ? getAssetPublicUrl(data.thumbnail_url) : undefined,
+      thumbnail_url: cleanThumb,
       video_url: data.video_url ? getAssetPublicUrl(data.video_url) : undefined,
-      technical_summary: data.technical_summary || undefined,
+      technical_summary: hasPdfAsset ? (data.technical_summary || undefined) : undefined,
       created_at: data.created_at,
       updated_at: data.updated_at,
       deleted_at: data.deleted_at,
@@ -384,8 +406,7 @@ export const analysesService = {
     const folderSlug = projectSlug;
 
     // 2. Subir archivos a Supabase Storage (guardando ruta relativa)
-    let beforeStoragePath =
-      'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80';
+    let beforeStoragePath: string | null = null;
     if (dto.imageBeforeFile) {
       if (onProgress) onProgress(25);
       const uploaded = await uploadAssetToStorage(
@@ -396,8 +417,7 @@ export const analysesService = {
       beforeStoragePath = uploaded.storagePath;
     }
 
-    let afterStoragePath =
-      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+    let afterStoragePath: string | null = null;
     if (dto.imageAfterFile) {
       if (onProgress) onProgress(45);
       const uploaded = await uploadAssetToStorage(
@@ -408,10 +428,11 @@ export const analysesService = {
       afterStoragePath = uploaded.storagePath;
     }
 
-    let pdfStoragePath = '';
-    const pdfFilename = dto.pdfReportFile?.name || 'Reporte_Tecnico_Oficial.pdf';
+    let pdfStoragePath: string | null = null;
+    let pdfFilename: string | null = null;
     if (dto.pdfReportFile) {
       if (onProgress) onProgress(65);
+      pdfFilename = dto.pdfReportFile.name;
       const uploaded = await uploadAssetToStorage(
         dto.pdfReportFile,
         folderSlug,
@@ -420,7 +441,7 @@ export const analysesService = {
       pdfStoragePath = uploaded.storagePath;
     }
 
-    let videoStoragePath = dto.videoUrl?.trim() || '';
+    let videoStoragePath: string | null = dto.videoUrl?.trim() || null;
     if (dto.videoFile) {
       if (onProgress) onProgress(75);
       const uploaded = await uploadAssetToStorage(
@@ -433,17 +454,18 @@ export const analysesService = {
 
     if (onProgress) onProgress(80);
 
-    const technicalSummary = {
-      pdf_filename: pdfFilename,
-      pdf_total_pages: 8,
-      tags: ['Recién Publicado', 'Alta Prioridad'],
-      metrics: [
-        { label: 'Resolución', value: 'Sub-métrica' },
-        { label: 'Estado de carga', value: 'Verificado' },
-        { label: 'Procesamiento', value: 'Completado' },
-      ],
-      executive_summary: dto.description.trim(),
-    };
+    // Solo asociar technical_summary si realmente se cargó un documento PDF
+    const technicalSummary = pdfStoragePath
+      ? {
+          pdf_filename: pdfFilename || 'Reporte_Tecnico.pdf',
+          pdf_total_pages: 1,
+          tags: ['Documento Técnico'],
+          metrics: [],
+          executive_summary: dto.description.trim(),
+        }
+      : null;
+
+    const thumbnailUrl = afterStoragePath || beforeStoragePath || null;
 
     // 3. Insertar el análisis principal en Supabase
     const { data: createdAnalysis, error: insertError } = await supabase
@@ -455,7 +477,7 @@ export const analysesService = {
         description: dto.description.trim(),
         city: dto.city.trim(),
         category_slug: dto.category_slug,
-        thumbnail_url: afterStoragePath,
+        thumbnail_url: thumbnailUrl,
         video_url: videoStoragePath || null,
         technical_summary: technicalSummary,
       })
@@ -469,7 +491,7 @@ export const analysesService = {
 
     if (onProgress) onProgress(90);
 
-    // 4. Preparar e insertar assets asociados en Supabase
+    // 4. Preparar e insertar assets asociados en Supabase ÚNICAMENTE para los archivos reales subidos
     const assetsToInsert: Array<{
       analysis_id: string;
       asset_type: import('../types/analysis').AssetType;
@@ -477,41 +499,45 @@ export const analysesService = {
       mime_type: string;
       file_size_bytes?: number;
       metadata?: Record<string, unknown>;
-    }> = [
-        {
-          analysis_id: createdAnalysis.id,
-          asset_type: 'image_before',
-          storage_path: beforeStoragePath,
-          mime_type: dto.imageBeforeFile?.type || 'image/jpeg',
-          file_size_bytes: dto.imageBeforeFile?.size || 1024 * 1024 * 2,
-          metadata: {
-            label: 'Histórico (Previa)',
-            year: String(new Date().getFullYear() - 2),
-          },
-        },
-        {
-          analysis_id: createdAnalysis.id,
-          asset_type: 'image_after',
-          storage_path: afterStoragePath,
-          mime_type: dto.imageAfterFile?.type || 'image/jpeg',
-          file_size_bytes: dto.imageAfterFile?.size || 1024 * 1024 * 3,
-          metadata: {
-            label: 'Actual (Reciente)',
-            year: String(new Date().getFullYear()),
-          },
-        },
-      ];
+    }> = [];
 
-    if (pdfStoragePath) {
+    if (beforeStoragePath && dto.imageBeforeFile) {
+      assetsToInsert.push({
+        analysis_id: createdAnalysis.id,
+        asset_type: 'image_before',
+        storage_path: beforeStoragePath,
+        mime_type: dto.imageBeforeFile.type || 'image/jpeg',
+        file_size_bytes: dto.imageBeforeFile.size || 1024 * 1024 * 2,
+        metadata: {
+          label: 'Histórico (Previa)',
+          year: String(new Date().getFullYear() - 2),
+        },
+      });
+    }
+
+    if (afterStoragePath && dto.imageAfterFile) {
+      assetsToInsert.push({
+        analysis_id: createdAnalysis.id,
+        asset_type: 'image_after',
+        storage_path: afterStoragePath,
+        mime_type: dto.imageAfterFile.type || 'image/jpeg',
+        file_size_bytes: dto.imageAfterFile.size || 1024 * 1024 * 3,
+        metadata: {
+          label: 'Actual (Reciente)',
+          year: String(new Date().getFullYear()),
+        },
+      });
+    }
+
+    if (pdfStoragePath && dto.pdfReportFile) {
       assetsToInsert.push({
         analysis_id: createdAnalysis.id,
         asset_type: 'pdf_report',
         storage_path: pdfStoragePath,
-        mime_type: dto.pdfReportFile?.type || 'application/pdf',
-        file_size_bytes: dto.pdfReportFile?.size || 1024 * 1024 * 4,
+        mime_type: dto.pdfReportFile.type || 'application/pdf',
+        file_size_bytes: dto.pdfReportFile.size || 1024 * 1024 * 4,
         metadata: {
-          pages: 8,
-          filename: pdfFilename,
+          filename: pdfFilename || 'Reporte_Tecnico.pdf',
         },
       });
     }
@@ -524,18 +550,22 @@ export const analysesService = {
         mime_type: dto.videoFile?.type || 'video/mp4',
         file_size_bytes: dto.videoFile?.size || 1024 * 1024 * 10,
         metadata: {
-          label: 'Recorrido en Video',
+          is_external_url: !dto.videoFile,
         },
       });
     }
 
-    const { data: createdAssets, error: assetsError } = await supabase
-      .from('analysis_assets')
-      .insert(assetsToInsert)
-      .select();
+    let createdAssets: AnalysisAsset[] = [];
+    if (assetsToInsert.length > 0) {
+      const { data, error: assetsError } = await supabase
+        .from('analysis_assets')
+        .insert(assetsToInsert)
+        .select();
 
-    if (assetsError) {
-      console.warn('Warning inserting analysis assets:', assetsError);
+      if (assetsError) {
+        console.warn('Advertencia al insertar assets en Supabase:', assetsError.message);
+      }
+      if (data) createdAssets = data;
     }
 
     if (onProgress) onProgress(100);
@@ -552,16 +582,19 @@ export const analysesService = {
       id: createdAnalysis.id,
       slug: createdAnalysis.slug,
       project_id: createdAnalysis.project_id,
+      project_slug: projectSlug,
       title: createdAnalysis.title,
       description: createdAnalysis.description,
       city: createdAnalysis.city,
       category_slug: createdAnalysis.category_slug,
       category: categoryObj,
-      thumbnail_url: getAssetPublicUrl(createdAnalysis.thumbnail_url),
+      thumbnail_url: createdAnalysis.thumbnail_url
+        ? getAssetPublicUrl(createdAnalysis.thumbnail_url)
+        : undefined,
       video_url: createdAnalysis.video_url
         ? getAssetPublicUrl(createdAnalysis.video_url)
         : undefined,
-      technical_summary: createdAnalysis.technical_summary,
+      technical_summary: createdAnalysis.technical_summary || undefined,
       created_at: createdAnalysis.created_at,
       updated_at: createdAnalysis.updated_at,
       deleted_at: createdAnalysis.deleted_at,

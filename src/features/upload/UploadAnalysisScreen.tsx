@@ -80,6 +80,14 @@ export const UploadAnalysisScreen: React.FC = () => {
       return;
     }
 
+    // Validación de imágenes: Al menos 1 imagen es obligatoria (Histórica o Actual)
+    if (!imageBefore && !imageAfter) {
+      setFormError(
+        'Debes subir al menos una imagen ("Imagen Histórica" o "Imagen Actual") para publicar el análisis.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setUploadProgress(10);
 
@@ -108,13 +116,22 @@ export const UploadAnalysisScreen: React.FC = () => {
       setPdfReport(null);
       setVideoFile(null);
 
+      const returnUrl = projectParam
+        ? `/proyectos/${projectParam}`
+        : created.project_slug
+        ? `/proyectos/${created.project_slug}`
+        : '/proyectos';
+
       setSuccessMessage(
         `¡Análisis "${created.title}" publicado con éxito! Redirigiendo a su visualizador...`
       );
 
-      // Redirigir a la vista de detalle por slug
+      // Redirigir a la vista de detalle reemplazando el formulario en el historial
       setTimeout(() => {
-        navigate(`/analisis/${created.slug}`);
+        navigate(`/analisis/${created.slug}`, {
+          replace: true,
+          state: { fromProject: returnUrl },
+        });
       }, 1200);
     } catch (err) {
       setFormError(
@@ -278,6 +295,18 @@ export const UploadAnalysisScreen: React.FC = () => {
 
             {/* Columna Derecha: Zonas de Carga Multimedia (Validación image/* y .pdf) */}
             <div className="space-y-4">
+              <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+                <span className="text-xs font-['Inter'] font-semibold text-[#d4e4fa] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#7bd0ff]">
+                    collections
+                  </span>
+                  Imágenes Geoespaciales <span className="text-[#ec6a06]">*</span>
+                </span>
+                <span className="text-[11px] text-[#ffb690] font-medium bg-[#ec6a06]/15 px-2 py-0.5 rounded border border-[#ec6a06]/30">
+                  Al menos 1 es obligatoria
+                </span>
+              </div>
+
               {/* Imagen Histórica (Antes) */}
               <UploadDropzone
                 label="Imagen Histórica (Antes)"
