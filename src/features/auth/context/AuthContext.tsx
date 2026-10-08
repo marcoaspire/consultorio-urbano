@@ -65,6 +65,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithMicrosoft = async (redirectTo?: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await authService.signInWithMicrosoft(redirectTo);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const register = async (dto: CreateUserDTO): Promise<User> => {
     setIsLoading(true);
     try {
@@ -102,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: Boolean(user && session),
         isLoading,
         login,
+        loginWithMicrosoft,
         register,
         logout,
         refreshProfile,
