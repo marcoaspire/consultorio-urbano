@@ -36,6 +36,7 @@ export const authService = {
       firstname: firstname.trim(),
       lastname: lastname.trim(),
       email: email.trim(),
+      role: 'viewer' as const,
       avatar_url: null,
       updated_at: now,
     };
@@ -50,11 +51,13 @@ export const authService = {
       console.warn('Advertencia al sincronizar perfil en public.users:', profileError.message);
     }
 
-    const userResult: User = insertedProfile || {
-      ...newProfile,
-      created_at: now,
-      deleted_at: null,
-    };
+    const userResult: User = insertedProfile
+      ? { ...(insertedProfile as User), role: (insertedProfile.role as import('../types/user').UserRole) || 'viewer' }
+      : {
+          ...newProfile,
+          created_at: now,
+          deleted_at: null,
+        };
 
     // Si Supabase no devolvió la sesión directamente en el signUp, iniciar sesión automáticamente
     let activeSession = authData.session;
@@ -215,6 +218,7 @@ export const authService = {
 
       return {
         ...(profile as User),
+        role: (profile.role as import('../types/user').UserRole) || 'viewer',
         avatar_url: avatarUrl || profile.avatar_url || null,
       };
     }
@@ -225,6 +229,7 @@ export const authService = {
       firstname: resolvedFirstname,
       lastname: resolvedLastname,
       email: authUser?.email || '',
+      role: 'viewer',
       avatar_url: avatarUrl,
       created_at: authUser?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -238,6 +243,7 @@ export const authService = {
         firstname: fallbackUser.firstname,
         lastname: fallbackUser.lastname,
         email: fallbackUser.email,
+        role: 'viewer',
         avatar_url: fallbackUser.avatar_url,
         updated_at: new Date().toISOString(),
       });

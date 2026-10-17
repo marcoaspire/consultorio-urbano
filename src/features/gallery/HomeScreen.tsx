@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
+import { useAuth } from '../auth/hooks/useAuth';
 import { analysesService } from '../../services/analyses.service';
 import { projectsService } from '../../services/projects.service';
 import type { Analysis } from '../../types/analysis';
@@ -15,6 +16,7 @@ import { useAnalyses } from './hooks/useAnalyses';
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const { projectSlug } = useParams<{ projectSlug: string }>();
+  const { isAdmin } = useAuth();
 
   // Estado del proyecto actual (Nivel 2)
   const [project, setProject] = useState<Project | null>(null);
@@ -82,6 +84,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleNewAnalysis = () => {
+    if (!isAdmin) return;
     if (projectSlug) {
       navigate(`/nuevo?project=${projectSlug}`);
     } else {
@@ -192,16 +195,22 @@ export const HomeScreen: React.FC = () => {
                   Comienza publicando el primer estudio geoespacial, ortomosaico o comparativa antes/después para este territorio.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleNewAnalysis}
-                className="flex items-center gap-2 bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-2.5 px-5 rounded-lg shadow-md shadow-[#ec6a06]/20 transition-all cursor-pointer mt-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  add
-                </span>
-                <span>+ Subir Primer Análisis</span>
-              </button>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={handleNewAnalysis}
+                  className="flex items-center gap-2 bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-2.5 px-5 rounded-lg shadow-md shadow-[#ec6a06]/20 transition-all cursor-pointer mt-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    add
+                  </span>
+                  <span>+ Subir Primer Análisis</span>
+                </button>
+              ) : (
+                <div className="text-xs text-[#7bd0ff] font-['Inter'] bg-[#7bd0ff]/10 border border-[#7bd0ff]/20 px-3 py-1.5 rounded-lg mt-2">
+                  Esperando publicación de entregas por el equipo técnico.
+                </div>
+              )}
             </div>
           ) : (
             <AnalysisGrid
@@ -209,8 +218,8 @@ export const HomeScreen: React.FC = () => {
               isLoading={isLoading}
               limit={pagination.limit}
               onSelectAnalysis={(item) => navigate(`/analisis/${item.slug}`)}
-              onEditAnalysis={(item) => setAnalysisToEdit(item)}
-              onDeleteAnalysis={(item) => setAnalysisToDelete(item)}
+              onEditAnalysis={isAdmin ? (item) => setAnalysisToEdit(item) : undefined}
+              onDeleteAnalysis={isAdmin ? (item) => setAnalysisToDelete(item) : undefined}
               onResetFilters={handleClearFilters}
             />
           )}

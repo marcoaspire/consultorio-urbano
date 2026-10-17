@@ -103,6 +103,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const role = user?.role ?? null;
+  const isAdmin = role === 'admin';
+  const isViewer = role === 'viewer';
+
   return (
     <AuthContext.Provider
       value={{
@@ -110,6 +114,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         isAuthenticated: Boolean(user && session),
         isLoading,
+        role,
+        isAdmin,
+        isViewer,
         login,
         loginWithMicrosoft,
         register,

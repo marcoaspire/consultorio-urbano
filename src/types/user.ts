@@ -4,11 +4,14 @@
  * Las contraseñas son gestionadas de forma segura y nativa por Supabase Auth (auth.users).
  */
 
+export type UserRole = 'admin' | 'viewer';
+
 export interface User {
   id: string; // UUID de Supabase Auth
   firstname: string;
   lastname: string;
   email: string;
+  role: UserRole;
   avatar_url?: string | null;
   created_at: string;
   updated_at: string;

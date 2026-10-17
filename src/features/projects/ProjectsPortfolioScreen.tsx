@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
+import { useAuth } from '../auth/hooks/useAuth';
 import { categoriesService } from '../../services/categories.service';
 import { projectsService } from '../../services/projects.service';
 import type { Category } from '../../types/category';
@@ -11,6 +12,7 @@ import { ProjectCardSkeleton } from './components/ProjectCardSkeleton';
 
 export const ProjectsPortfolioScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -93,11 +95,13 @@ export const ProjectsPortfolioScreen: React.FC = () => {
   }, [debouncedSearch, categorySlug]);
 
   const handleOpenCreateModal = () => {
+    if (!isAdmin) return;
     setProjectToEdit(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (project: Project) => {
+    if (!isAdmin) return;
     setProjectToEdit(project);
     setIsModalOpen(true);
   };
@@ -326,16 +330,18 @@ export const ProjectsPortfolioScreen: React.FC = () => {
                     Restablecer Filtros
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-['Inter'] font-semibold bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white shadow-md transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    add
-                  </span>
-                  <span>+ Nuevo Proyecto</span>
-                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateModal}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-['Inter'] font-semibold bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white shadow-md transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      add
+                    </span>
+                    <span>+ Nuevo Proyecto</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -345,8 +351,8 @@ export const ProjectsPortfolioScreen: React.FC = () => {
                   key={project.id}
                   project={project}
                   onSelect={handleSelectProject}
-                  onEdit={handleOpenEditModal}
-                  onDelete={handleInitiateDelete}
+                  onEdit={isAdmin ? handleOpenEditModal : undefined}
+                  onDelete={isAdmin ? handleInitiateDelete : undefined}
                 />
               ))}
             </div>

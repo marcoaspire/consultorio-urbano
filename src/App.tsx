@@ -67,7 +67,7 @@ function App() {
           <Route
             path="/nuevo"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireAdmin redirectTo="/proyectos">
                 <UploadAnalysisScreen />
               </ProtectedRoute>
             }

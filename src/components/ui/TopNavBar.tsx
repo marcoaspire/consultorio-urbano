@@ -30,7 +30,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   onBrandClick,
 }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -172,8 +172,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
         {/* Controles de Acción y Usuario */}
         <div className="flex items-center gap-3 ml-auto">
-          {/* Botón de Acción Principal (+ Nuevo Análisis o Proyecto) */}
-          {!isDetailView && (
+          {/* Botón de Acción Principal (+ Nuevo Análisis o Proyecto) solo para Administradores */}
+          {!isDetailView && isAdmin && (
             <button
               type="button"
               onClick={handleNewClick}
@@ -192,7 +192,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="w-9 h-9 rounded-full bg-[#1c2b3c] hover:bg-[#273647] border border-[#7bd0ff]/40 flex items-center justify-center text-[#7bd0ff] font-['Montserrat'] font-bold text-xs shadow-sm transition-all cursor-pointer relative"
-                title={`${user.firstname} ${user.lastname}`}
+                title={`${user.firstname} ${user.lastname} (${user.role === 'admin' ? 'Administrador' : 'Lector'})`}
               >
                 {hasAvatar ? (
                   <img
@@ -243,9 +243,21 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                     <p className="font-['Montserrat'] font-bold text-xs text-[#d4e4fa] truncate">
                       {user.firstname} {user.lastname}
                     </p>
-                    <p className="font-['Inter'] text-[11px] text-[#909097] truncate">
+                    <p className="font-['Inter'] text-[11px] text-[#909097] truncate mb-1">
                       {user.email}
                     </p>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-['Inter'] font-semibold uppercase tracking-wider ${
+                        user.role === 'admin'
+                          ? 'bg-[#ec6a06]/20 text-[#ffb690] border border-[#ec6a06]/40'
+                          : 'bg-[#7bd0ff]/15 text-[#7bd0ff] border border-[#7bd0ff]/30'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[12px]">
+                        {user.role === 'admin' ? 'verified_user' : 'visibility'}
+                      </span>
+                      {user.role === 'admin' ? 'Administrador' : 'Lector / Viewer'}
+                    </span>
                   </div>
                 </div>
 
