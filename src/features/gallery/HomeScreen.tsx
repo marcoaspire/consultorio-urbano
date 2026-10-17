@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
 import { useAuth } from '../auth/hooks/useAuth';
 import { analysesService } from '../../services/analyses.service';
@@ -15,6 +15,7 @@ import { useAnalyses } from './hooks/useAnalyses';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { projectSlug } = useParams<{ projectSlug: string }>();
   const { isAdmin } = useAuth();
 
@@ -77,6 +78,13 @@ export const HomeScreen: React.FC = () => {
   });
 
   const [notification, setNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (location.state?.unauthorized) {
+      setNotification(location.state.message || 'Acceso restringido a administradores.');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleClearFilters = () => {
     setCategory('todos');

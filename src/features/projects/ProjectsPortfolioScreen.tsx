@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
 import { useAuth } from '../auth/hooks/useAuth';
 import { categoriesService } from '../../services/categories.service';
@@ -12,6 +12,7 @@ import { ProjectCardSkeleton } from './components/ProjectCardSkeleton';
 
 export const ProjectsPortfolioScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin } = useAuth();
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -37,6 +38,14 @@ export const ProjectsPortfolioScreen: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  // Detectar redirección desde ruta administrativa no autorizada
+  useEffect(() => {
+    if (location.state?.unauthorized) {
+      showToast(location.state.message || 'Acceso restringido a administradores.');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Cargar lista de categorías para pestañas
   useEffect(() => {

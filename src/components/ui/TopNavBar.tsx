@@ -208,17 +208,17 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#051424]" />
               </button>
             ) : (
-              /* Usuario No Autenticado: Botón Acceso */
+              /* Usuario No Autenticado: Botón Acceso Administrador */
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="flex items-center gap-1.5 bg-[#122131] hover:bg-[#1c2b3c] border border-white/10 hover:border-[#7bd0ff]/50 text-[#bec6e0] hover:text-white font-['Inter'] font-medium text-xs py-2 px-3 sm:px-3.5 rounded-lg shadow-sm transition-all cursor-pointer"
-                title="Iniciar Sesión o Registrarse"
+                className="flex items-center gap-1.5 bg-[#122131] hover:bg-[#1c2b3c] border border-white/10 hover:border-[#ec6a06]/40 text-[#bec6e0] hover:text-[#ffb690] font-['Inter'] font-medium text-xs py-2 px-3 sm:px-3.5 rounded-lg shadow-sm transition-all cursor-pointer"
+                title="Acceso Administrador (Microsoft / Credenciales)"
               >
-                <span className="material-symbols-outlined text-[18px] text-[#7bd0ff]">
-                  account_circle
+                <span className="material-symbols-outlined text-[17px] text-[#ec6a06]">
+                  admin_panel_settings
                 </span>
-                <span className="hidden sm:inline">Acceso</span>
+                <span className="hidden sm:inline">Acceso Admin</span>
               </button>
             )}
 

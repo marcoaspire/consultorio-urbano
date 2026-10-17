@@ -39,31 +39,13 @@ function App() {
             }
           />
 
-          {/* Rutas Privadas Protegidas (Exigen usuario logueado, redirigen a /login) */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <ProjectsPortfolioScreen />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/proyectos"
-            element={
-              <ProtectedRoute>
-                <ProjectsPortfolioScreen />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/proyectos/:projectSlug"
-            element={
-              <ProtectedRoute>
-                <HomeScreen />
-              </ProtectedRoute>
-            }
-          />
+          {/* Rutas Públicas de Consulta (Navegación libre para cualquier visitante) */}
+          <Route path="/" element={<ProjectsPortfolioScreen />} />
+          <Route path="/proyectos" element={<ProjectsPortfolioScreen />} />
+          <Route path="/proyectos/:projectSlug" element={<HomeScreen />} />
+          <Route path="/analisis/:slug" element={<AnalysisDetailScreen />} />
+
+          {/* Rutas Administrativas Protegidas (Exigen usuario con rol 'admin') */}
           <Route
             path="/nuevo"
             element={
@@ -73,12 +55,8 @@ function App() {
             }
           />
           <Route
-            path="/analisis/:slug"
-            element={
-              <ProtectedRoute>
-                <AnalysisDetailScreen />
-              </ProtectedRoute>
-            }
+            path="/subir-analisis"
+            element={<Navigate to="/nuevo" replace />}
           />
 
           {/* Redirección por defecto */}

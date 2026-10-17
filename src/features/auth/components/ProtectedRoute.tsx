@@ -31,11 +31,32 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <Navigate
+        to="/login"
+        state={{
+          from: location,
+          unauthorized: requireAdmin,
+          message: requireAdmin
+            ? 'Inicia sesión con tu cuenta de administrador para acceder.'
+            : undefined,
+        }}
+        replace
+      />
+    );
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to={redirectTo} replace />;
+    return (
+      <Navigate
+        to={redirectTo}
+        state={{
+          unauthorized: true,
+          message: 'Acceso restringido a administradores.',
+        }}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;
