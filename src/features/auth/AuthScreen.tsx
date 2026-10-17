@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 
@@ -6,11 +6,28 @@ interface AuthScreenProps {
   initialTab?: 'login' | 'register';
 }
 
+const MicrosoftLogo: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 21 21"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+    <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+    <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+    <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+  </svg>
+);
+
+const isPasswordAuthEnabled = import.meta.env.VITE_ENABLE_PASSWORD_AUTH === 'true';
+
 export const AuthScreen: React.FC<AuthScreenProps> = ({ initialTab = 'login' }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { login, register } = useAuth();
+  const { login, loginWithMicrosoft, register } = useAuth();
 
   // Tab activo: 'login' o 'register'
   const urlTab = searchParams.get('tab');
@@ -34,16 +51,64 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialTab = 'login' }) 
 
   // Estados de carga y mensajes
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Ruta de redirección después del login
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
 
+  // Capturar errores retornados en la URL tras redirección OAuth de Supabase
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const errorDesc = searchParams.get('error_description');
+
+    if (errorDesc || errorParam) {
+      setErrorMessage(
+        decodeURIComponent(
+          errorDesc || errorParam || 'Ocurrió un error al autenticar con Microsoft.'
+        )
+      );
+      return;
+    }
+
+    if (window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const hashError = hashParams.get('error');
+      const hashDesc = hashParams.get('error_description');
+      if (hashDesc || hashError) {
+        setErrorMessage(
+          decodeURIComponent(
+            hashDesc || hashError || 'Ocurrió un error al autenticar con Microsoft.'
+          )
+        );
+      }
+    }
+  }, [searchParams]);
+
   const handleSwitchTab = (tab: 'login' | 'register') => {
     setActiveTab(tab);
     setErrorMessage(null);
     setSuccessMessage(null);
+  };
+
+  const handleMicrosoftLogin = async () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsMicrosoftLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}${from === '/' ? '' : from}`;
+      await loginWithMicrosoft(redirectUrl);
+    } catch (err) {
+      setIsMicrosoftLoading(false);
+      const msg =
+        err instanceof Error
+          ? err.message.includes('provider is not enabled')
+            ? 'El proveedor Azure/Microsoft no está habilitado en el panel de Supabase Auth.'
+            : err.message
+          : 'Error al iniciar sesión con Microsoft.';
+      setErrorMessage(msg);
+    }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -167,31 +232,33 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialTab = 'login' }) 
 
         {/* Tarjeta Glassmorphism */}
         <div className="glass-panel rounded-xl shadow-2xl overflow-hidden border border-white/15 backdrop-blur-xl bg-[#122131]/85">
-          {/* Selector de Pestañas (Acceso | Crear Cuenta) */}
-          <div className="flex border-b border-white/10">
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('login')}
-              className={`flex-1 py-3.5 text-xs font-['Inter'] font-semibold text-center transition-all cursor-pointer ${
-                activeTab === 'login'
-                  ? 'text-[#bec6e0] border-b-2 border-[#7bd0ff] bg-[#273647]/30'
-                  : 'text-[#c6c6cd] hover:text-[#d4e4fa] hover:bg-[#273647]/10 border-b-2 border-transparent'
-              }`}
-            >
-              Acceso
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchTab('register')}
-              className={`flex-1 py-3.5 text-xs font-['Inter'] font-semibold text-center transition-all cursor-pointer ${
-                activeTab === 'register'
-                  ? 'text-[#bec6e0] border-b-2 border-[#7bd0ff] bg-[#273647]/30'
-                  : 'text-[#c6c6cd] hover:text-[#d4e4fa] hover:bg-[#273647]/10 border-b-2 border-transparent'
-              }`}
-            >
-              Crear Cuenta
-            </button>
-          </div>
+          {/* Selector de Pestañas (Acceso | Crear Cuenta) - Solo en Modo Completo */}
+          {isPasswordAuthEnabled && (
+            <div className="flex border-b border-white/10">
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('login')}
+                className={`flex-1 py-3.5 text-xs font-['Inter'] font-semibold text-center transition-all cursor-pointer ${
+                  activeTab === 'login'
+                    ? 'text-[#bec6e0] border-b-2 border-[#7bd0ff] bg-[#273647]/30'
+                    : 'text-[#c6c6cd] hover:text-[#d4e4fa] hover:bg-[#273647]/10 border-b-2 border-transparent'
+                }`}
+              >
+                Acceso
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('register')}
+                className={`flex-1 py-3.5 text-xs font-['Inter'] font-semibold text-center transition-all cursor-pointer ${
+                  activeTab === 'register'
+                    ? 'text-[#bec6e0] border-b-2 border-[#7bd0ff] bg-[#273647]/30'
+                    : 'text-[#c6c6cd] hover:text-[#d4e4fa] hover:bg-[#273647]/10 border-b-2 border-transparent'
+                }`}
+              >
+                Crear Cuenta
+              </button>
+            </div>
+          )}
 
           <div className="p-7">
             {/* Mensajes de Alerta de Error */}
@@ -214,290 +281,400 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ initialTab = 'login' }) 
               </div>
             )}
 
-            {/* Formulario de Login (Acceso) */}
-            {activeTab === 'login' ? (
-              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
-                {/* Correo Electrónico */}
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="login-email"
-                    className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                  >
-                    Correo Electrónico
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                      mail
-                    </span>
-                    <input
-                      id="login-email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="usuario@empresa.com"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                  </div>
-                </div>
-
-                {/* Contraseña */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center">
-                    <label
-                      htmlFor="login-password"
-                      className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                    >
-                      Contraseña
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        alert(
-                          'Para restablecer tu contraseña, contacta al administrador del sistema o revisa tu bandeja de correo.'
-                        )
-                      }
-                      className="text-[11px] text-[#7bd0ff] hover:underline cursor-pointer"
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                      lock
-                    </span>
-                    <input
-                      id="login-password"
-                      type={showLoginPassword ? 'text' : 'password'}
-                      required
-                      autoComplete="current-password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
-                      title={showLoginPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showLoginPassword ? 'visibility_off' : 'visibility'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Botón Iniciar Sesión */}
+            {!isPasswordAuthEnabled ? (
+              /* Modo Simplificado / OAuth Only: Tarjeta limpia, centrada, botón destacado y texto sutil */
+              <div className="flex flex-col gap-4 py-2">
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mt-3 w-full bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-3 rounded-lg shadow-md shadow-[#ec6a06]/25 transition-all duration-200 active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={handleMicrosoftLogin}
+                  disabled={isMicrosoftLoading}
+                  className="w-full bg-white hover:bg-slate-100 text-[#2f2f2f] font-['Segoe_UI',_'Inter',sans-serif] font-semibold text-sm sm:text-base py-3.5 px-5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer border border-gray-200 disabled:opacity-60 disabled:cursor-not-allowed group"
                 >
-                  {isSubmitting ? (
+                  {isMicrosoftLoading ? (
                     <>
-                      <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      <span>Validando credenciales...</span>
+                      <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-slate-800 rounded-full animate-spin" />
+                      <span className="text-slate-800 font-medium">Conectando con Microsoft...</span>
                     </>
                   ) : (
                     <>
-                      <span>Iniciar Sesión</span>
-                      <span className="material-symbols-outlined text-[18px]">
-                        arrow_forward
-                      </span>
+                      <MicrosoftLogo className="w-5 h-5 group-hover:scale-105 transition-transform shrink-0" />
+                      <span>Continuar con Microsoft</span>
                     </>
                   )}
                 </button>
-
-                {/* Pie de Cambio a Registro */}
-                <p className="text-center text-xs text-[#c6c6cd] mt-3 font-['Inter']">
-                  ¿No tienes cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchTab('register')}
-                    className="text-[#7bd0ff] font-semibold hover:underline cursor-pointer"
-                  >
-                    Crear Cuenta
-                  </button>
+                <p className="text-xs text-[#909097] text-center flex items-center justify-center gap-1.5 font-['Inter']">
+                  <span className="material-symbols-outlined text-[#7bd0ff] text-[16px]">
+                    verified_user
+                  </span>
+                  <span>Acceso institucional y cuentas Microsoft / Hotmail</span>
                 </p>
-              </form>
+              </div>
             ) : (
-              /* Formulario de Registro (Crear Cuenta) */
-              <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-4">
-                {/* Nombre y Apellido */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label
-                      htmlFor="reg-firstname"
-                      className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                    >
-                      Nombre <span className="text-[#ec6a06]">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                        person
-                      </span>
-                      <input
-                        id="reg-firstname"
-                        type="text"
-                        required
-                        value={regFirstName}
-                        onChange={(e) => setRegFirstName(e.target.value)}
-                        placeholder="Nombre"
-                        className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-3 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                      />
+              /* Modo Completo: Renderizar interfaz existente con pestañas, formularios tradicionales de email/password y el botón de Microsoft */
+              <>
+                {activeTab === 'login' ? (
+                  <div className="flex flex-col gap-5">
+                    {/* Botón Principal: Sign in with Microsoft */}
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={handleMicrosoftLogin}
+                        disabled={isMicrosoftLoading || isSubmitting}
+                        className="w-full bg-white hover:bg-slate-100 text-[#2f2f2f] font-['Segoe_UI',_'Inter',sans-serif] font-semibold text-xs sm:text-sm py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer border border-gray-200 disabled:opacity-60 disabled:cursor-not-allowed group"
+                      >
+                        {isMicrosoftLoading ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-slate-800 rounded-full animate-spin" />
+                            <span className="text-slate-800 font-medium">Conectando con Microsoft...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MicrosoftLogo className="w-5 h-5 group-hover:scale-105 transition-transform shrink-0" />
+                            <span>Sign in with Microsoft</span>
+                          </>
+                        )}
+                      </button>
+                      <p className="text-[11px] text-[#909097] text-center flex items-center justify-center gap-1.5 font-['Inter']">
+                        <span className="material-symbols-outlined text-[#7bd0ff] text-[15px]">
+                          verified_user
+                        </span>
+                        <span>Acceso institucional mediante Microsoft Entra ID</span>
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label
-                      htmlFor="reg-lastname"
-                      className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                    >
-                      Apellido <span className="text-[#ec6a06]">*</span>
-                    </label>
-                    <input
-                      id="reg-lastname"
-                      type="text"
-                      required
-                      value={regLastName}
-                      onChange={(e) => setRegLastName(e.target.value)}
-                      placeholder="Apellido"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] px-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                  </div>
-                </div>
-
-                {/* Correo Electrónico */}
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="reg-email"
-                    className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                  >
-                    Correo Electrónico <span className="text-[#ec6a06]">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                      mail
-                    </span>
-                    <input
-                      id="reg-email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="usuario@empresa.com"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                  </div>
-                </div>
-
-                {/* Contraseña */}
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="reg-password"
-                    className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                  >
-                    Contraseña <span className="text-[#ec6a06]">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                      lock
-                    </span>
-                    <input
-                      id="reg-password"
-                      type={showRegPassword ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      autoComplete="new-password"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegPassword(!showRegPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showRegPassword ? 'visibility_off' : 'visibility'}
+                    {/* Divisor con estilo */}
+                    <div className="relative flex items-center">
+                      <div className="flex-grow border-t border-white/10" />
+                      <span className="shrink-0 mx-3 text-[10px] font-semibold text-[#909097] uppercase tracking-wider font-['Inter']">
+                        o con correo corporativo
                       </span>
-                    </button>
+                      <div className="flex-grow border-t border-white/10" />
+                    </div>
+
+                    <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+                      {/* Correo Electrónico */}
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="login-email"
+                          className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                        >
+                          Correo Electrónico
+                        </label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                            mail
+                          </span>
+                          <input
+                            id="login-email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            placeholder="usuario@empresa.com"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contraseña */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center">
+                          <label
+                            htmlFor="login-password"
+                            className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                          >
+                            Contraseña
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              alert(
+                                'Para restablecer tu contraseña, contacta al administrador del sistema o revisa tu bandeja de correo.'
+                              )
+                            }
+                            className="text-[11px] text-[#7bd0ff] hover:underline cursor-pointer"
+                          >
+                            ¿Olvidaste tu contraseña?
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                            lock
+                          </span>
+                          <input
+                            id="login-password"
+                            type={showLoginPassword ? 'text' : 'password'}
+                            required
+                            autoComplete="current-password"
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowLoginPassword(!showLoginPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
+                            title={showLoginPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              {showLoginPassword ? 'visibility_off' : 'visibility'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Botón Iniciar Sesión */}
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || isMicrosoftLoading}
+                        className="mt-3 w-full bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-3 rounded-lg shadow-md shadow-[#ec6a06]/25 transition-all duration-200 active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                            <span>Validando credenciales...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Iniciar Sesión</span>
+                            <span className="material-symbols-outlined text-[18px]">
+                              arrow_forward
+                            </span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Pie de Cambio a Registro */}
+                      <p className="text-center text-xs text-[#c6c6cd] mt-3 font-['Inter']">
+                        ¿No tienes cuenta?{' '}
+                        <button
+                          type="button"
+                          onClick={() => handleSwitchTab('register')}
+                          className="text-[#7bd0ff] font-semibold hover:underline cursor-pointer"
+                        >
+                          Crear Cuenta
+                        </button>
+                      </p>
+                    </form>
                   </div>
-                </div>
+                ) : (
+                  /* Formulario de Registro (Crear Cuenta) */
+                  <div className="flex flex-col gap-5">
+                    {/* Botón Registro Rápido con Microsoft */}
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={handleMicrosoftLogin}
+                        disabled={isMicrosoftLoading || isSubmitting}
+                        className="w-full bg-white hover:bg-slate-100 text-[#2f2f2f] font-['Segoe_UI',_'Inter',sans-serif] font-semibold text-xs sm:text-sm py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer border border-gray-200 disabled:opacity-60 disabled:cursor-not-allowed group"
+                      >
+                        {isMicrosoftLoading ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-slate-800 rounded-full animate-spin" />
+                            <span className="text-slate-800 font-medium">Conectando con Microsoft...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MicrosoftLogo className="w-5 h-5 group-hover:scale-105 transition-transform shrink-0" />
+                            <span>Registrarse con Microsoft</span>
+                          </>
+                        )}
+                      </button>
+                      <p className="text-[11px] text-[#909097] text-center flex items-center justify-center gap-1.5 font-['Inter']">
+                        <span className="material-symbols-outlined text-[#7bd0ff] text-[15px]">
+                          badge
+                        </span>
+                        <span>Crea tu cuenta institucional al instante con Microsoft</span>
+                      </p>
+                    </div>
 
-                {/* Confirmar Contraseña */}
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="reg-confirm-password"
-                    className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
-                  >
-                    Confirmar Contraseña <span className="text-[#ec6a06]">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
-                      lock
-                    </span>
-                    <input
-                      id="reg-confirm-password"
-                      type={showRegConfirmPassword ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      autoComplete="new-password"
-                      value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      placeholder="Repite la contraseña"
-                      className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showRegConfirmPassword ? 'visibility_off' : 'visibility'}
+                    {/* Divisor con estilo */}
+                    <div className="relative flex items-center">
+                      <div className="flex-grow border-t border-white/10" />
+                      <span className="shrink-0 mx-3 text-[10px] font-semibold text-[#909097] uppercase tracking-wider font-['Inter']">
+                        o completa el formulario manual
                       </span>
-                    </button>
+                      <div className="flex-grow border-t border-white/10" />
+                    </div>
+
+                    <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-4">
+                      {/* Nombre y Apellido */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label
+                            htmlFor="reg-firstname"
+                            className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                          >
+                            Nombre <span className="text-[#ec6a06]">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                              person
+                            </span>
+                            <input
+                              id="reg-firstname"
+                              type="text"
+                              required
+                              value={regFirstName}
+                              onChange={(e) => setRegFirstName(e.target.value)}
+                              placeholder="Nombre"
+                              className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-3 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label
+                            htmlFor="reg-lastname"
+                            className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                          >
+                            Apellido <span className="text-[#ec6a06]">*</span>
+                          </label>
+                          <input
+                            id="reg-lastname"
+                            type="text"
+                            required
+                            value={regLastName}
+                            onChange={(e) => setRegLastName(e.target.value)}
+                            placeholder="Apellido"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] px-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Correo Electrónico */}
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="reg-email"
+                          className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                        >
+                          Correo Electrónico <span className="text-[#ec6a06]">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                            mail
+                          </span>
+                          <input
+                            id="reg-email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            value={regEmail}
+                            onChange={(e) => setRegEmail(e.target.value)}
+                            placeholder="usuario@empresa.com"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-4 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contraseña */}
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="reg-password"
+                          className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                        >
+                          Contraseña <span className="text-[#ec6a06]">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                            lock
+                          </span>
+                          <input
+                            id="reg-password"
+                            type={showRegPassword ? 'text' : 'password'}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                            value={regPassword}
+                            onChange={(e) => setRegPassword(e.target.value)}
+                            placeholder="Mínimo 6 caracteres"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPassword(!showRegPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              {showRegPassword ? 'visibility_off' : 'visibility'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Confirmar Contraseña */}
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="reg-confirm-password"
+                          className="text-[11px] font-semibold text-[#c6c6cd] uppercase tracking-wider font-['Inter']"
+                        >
+                          Confirmar Contraseña <span className="text-[#ec6a06]">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] text-[18px] pointer-events-none">
+                            lock
+                          </span>
+                          <input
+                            id="reg-confirm-password"
+                            type={showRegConfirmPassword ? 'text' : 'password'}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                            value={regConfirmPassword}
+                            onChange={(e) => setRegConfirmPassword(e.target.value)}
+                            placeholder="Repite la contraseña"
+                            className="w-full bg-[#1c2b3c] border-b-2 border-[#273647] focus:border-[#7bd0ff] rounded-t text-[#d4e4fa] text-xs font-['Inter'] pl-10 pr-10 py-3 focus:outline-none focus:bg-[#273647] transition-colors placeholder-[#909097]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c6c6cd] hover:text-[#d4e4fa] cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              {showRegConfirmPassword ? 'visibility_off' : 'visibility'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Botón Registrarse */}
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || isMicrosoftLoading}
+                        className="mt-3 w-full bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-3 rounded-lg shadow-md shadow-[#ec6a06]/25 transition-all duration-200 active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                            <span>Creando cuenta...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Registrarse</span>
+                            <span className="material-symbols-outlined text-[18px]">
+                              arrow_forward
+                            </span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Pie de Cambio a Login */}
+                      <p className="text-center text-xs text-[#c6c6cd] mt-3 font-['Inter']">
+                        ¿Ya tienes cuenta?{' '}
+                        <button
+                          type="button"
+                          onClick={() => handleSwitchTab('login')}
+                          className="text-[#7bd0ff] font-semibold hover:underline cursor-pointer"
+                        >
+                          Iniciar Sesión
+                        </button>
+                      </p>
+                    </form>
                   </div>
-                </div>
-
-                {/* Botón Registrarse */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mt-3 w-full bg-[#ec6a06] hover:bg-[#ffb690] hover:text-[#552100] text-white font-['Inter'] font-semibold text-xs py-3 rounded-lg shadow-md shadow-[#ec6a06]/25 transition-all duration-200 active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      <span>Creando cuenta...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Registrarse</span>
-                      <span className="material-symbols-outlined text-[18px]">
-                        arrow_forward
-                      </span>
-                    </>
-                  )}
-                </button>
-
-                {/* Pie de Cambio a Login */}
-                <p className="text-center text-xs text-[#c6c6cd] mt-3 font-['Inter']">
-                  ¿Ya tienes cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchTab('login')}
-                    className="text-[#7bd0ff] font-semibold hover:underline cursor-pointer"
-                  >
-                    Iniciar Sesión
-                  </button>
-                </p>
-              </form>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { TopNavBar } from '../../components/ui/TopNavBar';
 import { analysesService } from '../../services/analyses.service';
 import type { Analysis } from '../../types/analysis';
@@ -9,10 +9,28 @@ import { PdfViewerPanel } from './components/PdfViewerPanel';
 export const AnalysisDetailScreen: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mediaTab, setMediaTab] = useState<'comparador' | 'video'>('comparador');
+
+  const handleBack = () => {
+    // 1. Si se indicó explícitamente un origen en el estado de navegación
+    if (location.state?.fromProject) {
+      navigate(location.state.fromProject);
+      return;
+    }
+
+    // 2. Si el análisis pertenece a un proyecto (Nivel 2), volver a su vista
+    if (analysis?.project_slug) {
+      navigate(`/proyectos/${analysis.project_slug}`);
+      return;
+    }
+
+    // 3. Fallback: volver hacia atrás en el historial
+    navigate(-1);
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -41,30 +59,50 @@ export const AnalysisDetailScreen: React.FC = () => {
     };
   }, [slug]);
 
-  // Extraer imágenes antes/después del análisis
+  // Función auxiliar para descartar placeholders de Unsplash que hayan sido guardados previamente
+  const isRealAssetUrl = (url?: string | null): boolean => {
+    if (!url) return false;
+    return !url.includes('images.unsplash.com');
+  };
+
+  // Extraer imágenes antes/después del análisis sin placeholders ficticios
   const beforeAsset = analysis?.assets?.find(
-    (a) => a.asset_type === 'image_before'
+    (a) =>
+      a.asset_type === 'image_before' &&
+      isRealAssetUrl(a.public_url || a.storage_path)
   );
   const afterAsset = analysis?.assets?.find(
-    (a) => a.asset_type === 'image_after'
+    (a) =>
+      a.asset_type === 'image_after' &&
+      isRealAssetUrl(a.public_url || a.storage_path)
   );
 
   const beforeUrl =
-    beforeAsset?.public_url ||
-    beforeAsset?.storage_path ||
-    analysis?.thumbnail_url ||
-    'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80';
+    beforeAsset && isRealAssetUrl(beforeAsset.public_url || beforeAsset.storage_path)
+      ? beforeAsset.public_url || beforeAsset.storage_path
+      : null;
 
   const afterUrl =
-    afterAsset?.public_url ||
-    afterAsset?.storage_path ||
-    analysis?.thumbnail_url ||
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+    afterAsset && isRealAssetUrl(afterAsset.public_url || afterAsset.storage_path)
+      ? afterAsset.public_url || afterAsset.storage_path
+      : null;
+
+  // Si no hay assets antes/después explícitos, usar thumbnail_url como única imagen (si es real)
+  const cleanThumb = isRealAssetUrl(analysis?.thumbnail_url)
+    ? analysis?.thumbnail_url || null
+    : null;
+
+  const fallbackSingleUrl =
+    !beforeUrl && !afterUrl ? cleanThumb : null;
 
   const beforeLabel =
-    (beforeAsset?.metadata?.label as string) || 'Histórico (2020)';
+    (beforeAsset?.metadata?.label as string) || 'Histórico (Previa)';
   const afterLabel =
-    (afterAsset?.metadata?.label as string) || 'Actual (2023)';
+    (afterAsset?.metadata?.label as string) || 'Actual (Reciente)';
+  const singleLabel =
+    (beforeAsset?.metadata?.label as string) ||
+    (afterAsset?.metadata?.label as string) ||
+    'Inspección Satelital';
 
   // Extraer video del análisis (columna video_url o asset de tipo video)
   const videoAsset = analysis?.assets?.find(
@@ -109,7 +147,7 @@ export const AnalysisDetailScreen: React.FC = () => {
         onSearchChange={() => { }}
         isDetailView={true}
         backLabel="Volver"
-        onBackClick={() => navigate(-1)}
+        onBackClick={handleBack}
         onBrandClick={() => navigate('/')}
       />
 
@@ -239,8 +277,10 @@ export const AnalysisDetailScreen: React.FC = () => {
                   <ImageComparisonSlider
                     beforeImage={beforeUrl}
                     afterImage={afterUrl}
+                    singleImage={fallbackSingleUrl}
                     beforeLabel={beforeLabel}
                     afterLabel={afterLabel}
+                    singleLabel={singleLabel}
                   />
                 ) : (
                   /* Panel de Reproducción de Video */
@@ -309,7 +349,7 @@ export const AnalysisDetailScreen: React.FC = () => {
               {/* Columna Derecha: Visor de reporte PDF y métricas */}
               <PdfViewerPanel
                 pdfUrl={pdfUrl}
-                technicalSummary={analysis.technical_summary}
+                technicalSummary={pdfAsset ? analysis.technical_summary : undefined}
                 studyTitle={analysis.title}
               />
             </div>

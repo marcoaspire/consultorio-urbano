@@ -36,6 +36,7 @@ export const authService = {
       firstname: firstname.trim(),
       lastname: lastname.trim(),
       email: email.trim(),
+      avatar_url: null,
       updated_at: now,
     };
 
@@ -104,6 +105,26 @@ export const authService = {
   },
 
   /**
+   * Inicia el flujo de autenticación OAuth con Microsoft (Azure AD) mediante Supabase
+   */
+  async signInWithMicrosoft(redirectTo?: string): Promise<void> {
+    const origin = window.location.origin;
+    const targetRedirect = redirectTo || `${origin}/`;
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        scopes: 'email profile openid',
+        redirectTo: targetRedirect,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  /**
    * Cierra la sesión activa en Supabase
    */
   async signOut(): Promise<void> {
@@ -127,7 +148,7 @@ export const authService = {
 
   /**
    * Obtiene el perfil de un usuario desde public.users (respetando soft delete)
-   * Si no existe en la tabla, genera un perfil base usando la metadata de Auth
+   * Si no existe en la tabla, genera un perfil base usando la metadata de Auth (Microsoft/OAuth o Email)
    */
   async getUserProfile(userId: string, authUser?: SupabaseAuthUser): Promise<User> {
     const { data: profile, error } = await supabase
@@ -137,17 +158,74 @@ export const authService = {
       .is('deleted_at', null)
       .maybeSingle();
 
+    const metadata = authUser?.user_metadata || {};
+    const identityData = authUser?.identities?.[0]?.identity_data || {};
+
+    const fullName =
+      metadata.full_name ||
+      metadata.name ||
+      identityData.full_name ||
+      identityData.name ||
+      '';
+    const rawFirstname =
+      metadata.firstname ||
+      metadata.given_name ||
+      identityData.given_name ||
+      '';
+    const rawLastname =
+      metadata.lastname ||
+      metadata.family_name ||
+      identityData.family_name ||
+      '';
+
+    let resolvedFirstname = rawFirstname;
+    let resolvedLastname = rawLastname;
+
+    if (!resolvedFirstname && fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      resolvedFirstname = parts[0] || '';
+      resolvedLastname = parts.slice(1).join(' ') || '';
+    }
+
+    if (!resolvedFirstname) {
+      resolvedFirstname = authUser?.email?.split('@')[0] || 'Usuario';
+    }
+
+    const avatarUrl =
+      profile?.avatar_url ||
+      metadata.avatar_url ||
+      metadata.picture ||
+      metadata.avatar ||
+      identityData.avatar_url ||
+      identityData.picture ||
+      null;
+
     if (profile && !error) {
-      return profile as User;
+      // Si el perfil no tiene avatar_url persistido pero OAuth/Microsoft sí lo tiene, sincronizarlo
+      if (!profile.avatar_url && avatarUrl) {
+        try {
+          await supabase
+            .from('users')
+            .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+        } catch (err) {
+          console.warn('No se pudo actualizar avatar en public.users:', err);
+        }
+      }
+
+      return {
+        ...(profile as User),
+        avatar_url: avatarUrl || profile.avatar_url || null,
+      };
     }
 
     // Fallback con metadata de Supabase Auth
-    const metadata = authUser?.user_metadata || {};
     const fallbackUser: User = {
       id: userId,
-      firstname: metadata.firstname || authUser?.email?.split('@')[0] || 'Usuario',
-      lastname: metadata.lastname || '',
+      firstname: resolvedFirstname,
+      lastname: resolvedLastname,
       email: authUser?.email || '',
+      avatar_url: avatarUrl,
       created_at: authUser?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
@@ -160,6 +238,7 @@ export const authService = {
         firstname: fallbackUser.firstname,
         lastname: fallbackUser.lastname,
         email: fallbackUser.email,
+        avatar_url: fallbackUser.avatar_url,
         updated_at: new Date().toISOString(),
       });
     } catch {

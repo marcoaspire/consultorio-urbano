@@ -8,6 +8,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (dto: LoginDTO) => Promise<User>;
+  loginWithMicrosoft: (redirectTo?: string) => Promise<void>;
   register: (dto: CreateUserDTO) => Promise<User>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;

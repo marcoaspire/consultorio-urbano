@@ -75,6 +75,7 @@ export interface Analysis {
   assets?: AnalysisAsset[];
   // Relación con el Nivel 1: Proyecto / Terreno
   project_id: string;
+  project_slug?: string;
   // Campos auxiliares para renderizado visual y multimedia
   thumbnail_url?: string;
   video_url?: string;

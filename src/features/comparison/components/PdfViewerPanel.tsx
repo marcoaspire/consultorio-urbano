@@ -80,6 +80,56 @@ export const PdfViewerPanel: React.FC<PdfViewerPanelProps> = ({
     }
   };
 
+  if (!pdfUrl) {
+    return (
+      <aside
+        aria-label="Visor de Reporte PDF y Panel Lateral"
+        className="w-full xl:w-[460px] shrink-0 glass-panel rounded-xl flex flex-col overflow-hidden shadow-2xl relative border border-white/10"
+      >
+        {/* PDF Header */}
+        <div className="p-3.5 border-b border-white/10 flex justify-between items-center bg-[#1c2b3c]/60">
+          <div className="flex items-center gap-2 min-w-0 pr-2">
+            <span className="material-symbols-outlined text-[#909097] text-[20px] shrink-0">
+              picture_as_pdf
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-['Montserrat'] font-semibold text-xs sm:text-sm text-[#bec6e0] truncate">
+                Documentación Técnica (PDF)
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        {/* Empty State Body */}
+        <div className="flex-1 p-8 flex flex-col items-center justify-center text-center bg-[#010f1f]/40 min-h-[420px]">
+          <div className="w-14 h-14 rounded-full bg-[#122131] flex items-center justify-center text-[#909097] mb-3 border border-white/10 shadow-inner">
+            <span className="material-symbols-outlined text-[28px] text-[#909097]">
+              description
+            </span>
+          </div>
+          <h4 className="font-['Montserrat'] font-bold text-sm text-[#d4e4fa] mb-1">
+            Sin reporte técnico en PDF
+          </h4>
+          <p className="font-['Inter'] text-xs text-[#909097] leading-relaxed max-w-xs">
+            Este estudio geoespacial no cuenta con un documento técnico o reporte oficial en formato PDF registrado.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="p-3.5 border-t border-white/10 bg-[#122131]/95 flex justify-end items-center">
+          <button
+            type="button"
+            disabled
+            className="bg-[#273647]/50 text-[#909097] font-['Inter'] font-semibold text-xs px-3.5 py-2 rounded-lg border border-white/5 flex items-center gap-1.5 cursor-not-allowed opacity-60"
+          >
+            <span className="material-symbols-outlined text-[16px]">download</span>
+            <span>PDF no disponible</span>
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <>
       <aside
